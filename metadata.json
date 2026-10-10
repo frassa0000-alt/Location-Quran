@@ -1,0 +1,7 @@
+{
+  "name": "Quran - القرآن الكريم",
+  "description": "موقع إسلامي متكامل وخفيف لقراءة القرآن الكريم والاستماع للتلاوات العطرة، مع التفسير الميسر، أذكار المسلم، السبحة الإلكترونية، ومواقيت الصلاة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
