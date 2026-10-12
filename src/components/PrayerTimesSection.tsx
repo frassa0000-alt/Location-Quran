@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   MapPin,
   Sunrise,
@@ -8,6 +8,8 @@ import {
   Clock,
   Search,
   Check,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import {
   POPULAR_CITIES,
@@ -16,6 +18,15 @@ import {
   getHijriDate,
   PrayerTimesResult,
 } from '../utils/prayerCalculations';
+import { AdhanPlayerBanner } from './AdhanPlayerBanner';
+import {
+  loadAdhanSettings,
+  playAdhan,
+  stopAdhan,
+  isAdhanPlaying,
+  subscribeAdhanState,
+} from '../utils/adhanService';
+import { sendPrayerNotification } from '../utils/notificationService';
 
 export const PrayerTimesSection: React.FC = () => {
   // Selected City (Default: Makkah Al-Mukarramah, or saved choice)
@@ -64,6 +75,38 @@ export const PrayerTimesSection: React.FC = () => {
   }, [selectedCity, currentTime]);
 
   const hijriDate = getHijriDate(currentTime);
+
+  // Automatic Adhan trigger when prayer time is reached
+  const lastTriggeredPrayerRef = useRef<string>('');
+
+  useEffect(() => {
+    const settings = loadAdhanSettings();
+    if (!settings.autoPlayAdhan) return;
+
+    // Check if secondsRemaining is 0 (or within 1s window)
+    const { nextPrayer } = currentPrayerTimes;
+    const secondsRemaining = nextPrayer.secondsRemaining;
+    if (secondsRemaining <= 1) {
+      const prayerKey = nextPrayer.id as keyof typeof settings.enabledPrayers;
+      if (settings.enabledPrayers[prayerKey] && lastTriggeredPrayerRef.current !== nextPrayer.id) {
+        lastTriggeredPrayerRef.current = nextPrayer.id;
+        playAdhan(settings.voiceId, settings.volume).catch(() => {
+          // audio autoplay may be blocked until user interacts
+        });
+
+        // Browser notification if permitted
+        sendPrayerNotification(
+          `حان الآن موعد أذان ${nextPrayer.name}`,
+          `الله أكبر، حان الآن موعد أذان ${nextPrayer.name} في ${selectedCity.name}`
+        ).catch(() => {});
+      }
+    } else if (secondsRemaining > 10) {
+      // Reset trigger lock for next prayer cycle
+      if (lastTriggeredPrayerRef.current === nextPrayer.id) {
+        lastTriggeredPrayerRef.current = '';
+      }
+    }
+  }, [currentPrayerTimes, selectedCity.name]);
 
   // Filtered cities list
   const filteredCities = useMemo(() => {
@@ -159,6 +202,13 @@ export const PrayerTimesSection: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Adhan Player Banner: Direct Play, Voice Selection & Notifications */}
+      <AdhanPlayerBanner
+        nextPrayerName={currentPrayerTimes.nextPrayer.name}
+        nextPrayerTime={currentPrayerTimes.nextPrayer.time12}
+        secondsRemaining={currentPrayerTimes.nextPrayer.secondsRemaining}
+      />
 
       {/* 6 Prayer Times Cards for Active City */}
       <div className="space-y-2.5">

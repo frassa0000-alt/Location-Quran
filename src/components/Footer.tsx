@@ -25,10 +25,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }) => {
-  const [showSupportModal, setShowSupportModal] = useState(false);
   const [showKhatmahRewardModal, setShowKhatmahRewardModal] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [hasPrayed, setHasPrayed] = useState(false);
 
   // Form states for Khatmah Reward
   const [readerName, setReaderName] = useState('');
@@ -71,14 +68,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }
       console.error(err);
     }
     setFormSubmitted(true);
-  };
-
-  const handleCopyLink = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    });
   };
 
   return (
@@ -142,7 +131,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }
                 onClick={() => onNavigateTab('prayer')}
                 className="hover:text-amber-200 transition-colors"
               >
-                مواقيت الصلاة
+                مواقيت الصلاة والأذان
               </button>
             </li>
             <li>
@@ -159,14 +148,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }
                 className="hover:text-amber-200 transition-colors"
               >
                 إذاعات القرآن الكريم المباشرة
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => onNavigateTab('tafsir-chat')}
-                className="hover:text-amber-200 transition-colors text-amber-300 font-semibold"
-              >
-                التفسير بالكتابة (شات التفسير المعتمد)
               </button>
             </li>
             <li>
@@ -251,32 +232,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }
 
         <span className="text-[#244A3D] hidden sm:inline">•</span>
 
-        {/* زر دعم صاحب جنب كلمة صنع الموقع مع سهم يطلع وينزل */}
-        <button
-          onClick={() => {
-            setShowSupportModal(!showSupportModal);
-            if (!showSupportModal) setShowKhatmahRewardModal(false);
-          }}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-amber-200 hover:text-amber-100 border border-emerald-700/60 hover:border-amber-400/50 shadow-xs transition-all cursor-pointer font-medium active:scale-95 group"
-          title="دعم صاحب الموقع"
-          aria-expanded={showSupportModal}
-        >
-          <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/30 group-hover:scale-110 transition-transform" />
-          <span>دعم صاحب</span>
-          <ChevronDown
-            className={`w-3.5 h-3.5 text-amber-300 transition-transform duration-300 ${
-              showSupportModal ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-
-        <span className="text-[#244A3D] hidden sm:inline">•</span>
-
-        {/* زر مكافأة ختم القرآن جنب دعم صاحب */}
+        {/* زر مكافأة ختم القرآن */}
         <button
           onClick={() => {
             setShowKhatmahRewardModal(!showKhatmahRewardModal);
-            if (!showKhatmahRewardModal) setShowSupportModal(false);
           }}
           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-950/90 via-amber-900/70 to-amber-950/90 hover:from-amber-900 hover:to-amber-800 text-amber-300 hover:text-amber-100 border border-amber-500/70 hover:border-amber-400 shadow-md transition-all cursor-pointer font-bold active:scale-95 group"
           title="مكافأة ختم القرآن الكريم والشروط"
@@ -290,21 +249,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }
             }`}
           />
         </button>
-
-        <span className="text-[#244A3D] hidden sm:inline">•</span>
-
-        {/* زر قناة الواتساب الرسمية */}
-        <a
-          href="https://whatsapp.com/channel/0029Vb9A6zHF1YlNYIcxac0k"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 border border-emerald-600/70 hover:border-emerald-400 shadow-xs transition-all cursor-pointer font-bold active:scale-95 group text-xs"
-          title="قناة وجروب الواتساب الرسمية"
-        >
-          <MessageCircle className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
-          <span>قناة الواتساب 💬</span>
-          <ExternalLink className="w-3 h-3 text-emerald-400" />
-        </a>
       </div>
 
       {/* قسم تفاصيل مكافأة ختم القرآن الكريم */}
@@ -534,125 +478,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }
                 </div>
               </form>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* قسم تفاصيل دعم صاحب - يفتح وينزل ويطلع في نفس المكان بسلاسة */}
-      {showSupportModal && (
-        <div className="max-w-xl mx-auto mt-4 p-5 rounded-2xl bg-[#0F1E19] border border-[#234A3C] shadow-2xl text-right text-[#E5EFE9] space-y-4 animate-in fade-in slide-in-from-top-3 duration-200">
-          <div className="flex items-center justify-between border-b border-[#1D3B31] pb-2.5">
-            <div className="flex items-center gap-2 text-amber-300">
-              <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
-              <h3 className="font-bold text-sm">دعم صاحب الموقع</h3>
-            </div>
-            <button
-              onClick={() => setShowSupportModal(false)}
-              className="px-2.5 py-1 rounded-lg text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-1.5 text-xs cursor-pointer border border-[#1E3B30]"
-              title="إغلاق وطي القائمة"
-            >
-              <span>إغلاق</span>
-              <ChevronUp className="w-3.5 h-3.5 text-amber-300" />
-            </button>
-          </div>
-
-          <p className="text-xs text-[#95AEA3] leading-relaxed">
-            هذا الموقع صدقة جارية بُني تطوعاً لخدمة كتاب الله عز وجل، ويسعدنا جداً دعمكم وتشجيعكم لاستمرار الخدمة وتطويرها:
-          </p>
-
-          <div className="space-y-3 text-xs">
-            {/* خيار الدعاء */}
-            <div className="p-3.5 rounded-xl bg-[#142A22] border border-[#234A3C] space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-bold text-amber-200">
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>الدعاء الصالح (أعظم دعم)</span>
-                </div>
-              </div>
-              <p className="text-[11px] text-[#8FA89E]">
-                دعوة صادقة بظهر الغيب لصاحب الموقع ولوالديه بالبركة والمغفرة والقبول.
-              </p>
-              <button
-                onClick={() => setHasPrayed(true)}
-                className={`w-full py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-medium flex items-center justify-center gap-1.5 ${
-                  hasPrayed 
-                    ? 'bg-emerald-800/60 border-emerald-500 text-emerald-200' 
-                    : 'bg-emerald-950/60 border-emerald-800 hover:bg-emerald-900/60 text-emerald-300'
-                }`}
-              >
-                {hasPrayed ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-300" />
-                    <span>جزاك الله خيراً وتقبل منك الدعاء! 🤲</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🤲 دعوت له بظهر الغيب</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* خيار نشر ومشاركة الموقع */}
-            <div className="p-3.5 rounded-xl bg-[#142A22] border border-[#234A3C] space-y-2">
-              <div className="flex items-center gap-2 font-bold text-amber-200">
-                <Share2 className="w-4 h-4 text-amber-300" />
-                <span>نشر ومشاركة الموقع</span>
-              </div>
-              <p className="text-[11px] text-[#8FA89E]">
-                الدال على الخير كفاعله، نشرك للموقع بين أهلك وأصحابك يضاعف الأجر ويدعم استمراريته.
-              </p>
-              <button
-                onClick={handleCopyLink}
-                className="w-full py-2 px-3 rounded-lg bg-[#1B382D] hover:bg-[#234A3B] border border-[#2A5544] text-[#E0EFE8] flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                {copiedLink ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-300">تم نسخ رابط الموقع بنجاح!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 text-amber-300" />
-                    <span>نسخ رابط الموقع للمشاركة</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* قناة وجروب الواتساب الرسمية - اقتراحات وتحديثات */}
-            <div className="p-3.5 rounded-xl bg-[#142A22] border border-emerald-600/40 space-y-2.5 shadow-md">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 font-bold text-emerald-300">
-                  <MessageCircle className="w-4 h-4 text-emerald-400" />
-                  <span>قناة وجروب الواتساب الرسمية</span>
-                </div>
-                <span className="px-2.5 py-0.5 text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-lg flex items-center gap-1.5 shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>القناة متاحة الآن 🟢</span>
-                </span>
-              </div>
-
-              <p className="text-[11px] text-[#A6C5B8] leading-relaxed">
-                انضم الآن لقناتنا ومجموعتنا الرسمية على الواتساب لمتابعة جديد التحديثات، ومشاركة اقتراحاتك، والتواصل المباشر مع إدارة الموقع.
-              </p>
-
-              <a
-                href="https://whatsapp.com/channel/0029Vb9A6zHF1YlNYIcxac0k"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white text-xs flex items-center justify-center gap-2 transition-all cursor-pointer font-bold shadow-md active:scale-[0.99]"
-                title="الانضمام إلى قناة الواتساب"
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-200" />
-                <span>الانضمام لقناة الواتساب الرسمية 🟢</span>
-                <ExternalLink className="w-3.5 h-3.5 text-emerald-200" />
-              </a>
-
-              <div className="text-[11px] text-amber-300/90 bg-[#0E1F1A] px-3 py-2 rounded-lg border border-[#1A382E] text-center font-mono">
-                صُنع بواسطة: Location Studio
-              </div>
-            </div>
           </div>
         </div>
       )}

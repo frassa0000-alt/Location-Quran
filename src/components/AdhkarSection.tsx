@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, RotateCcw, Volume2, VolumeX, Sparkles, Sunrise, Sunset, Moon, Sun, BookOpen, Heart } from 'lucide-react';
 import { DHIKR_CATEGORIES, ADHKAR_DATA, DhikrItem } from '../data/adhkar';
 import { playTasbeehClickSound, playSuccessChime, triggerVibration } from '../utils/audio';
+import { AdhkarAudioPlayer } from './AdhkarAudioPlayer';
 
 export const AdhkarSection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<DhikrItem['category']>('morning');
@@ -71,6 +72,9 @@ export const AdhkarSection: React.FC = () => {
 
   const completedCount = currentItems.filter((item) => (counts[item.id] ?? item.count) === 0).length;
   const progressPercent = Math.round((completedCount / currentItems.length) * 100);
+
+  const currentCategoryObj = DHIKR_CATEGORIES.find((c) => c.id === selectedCategory);
+  const activeCategoryTitle = currentCategoryObj?.title || 'الأذكار';
 
   const getCategoryIcon = (id: DhikrItem['category']) => {
     switch (id) {
@@ -149,6 +153,12 @@ export const AdhkarSection: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Sheikh Audio Recitation Player (ميزة الاستماع لقراءة الشيخ للأذكار) */}
+      <AdhkarAudioPlayer
+        selectedCategory={selectedCategory}
+        categoryTitle={activeCategoryTitle}
+      />
 
       {/* Reset Category Action */}
       <div className="flex justify-end">

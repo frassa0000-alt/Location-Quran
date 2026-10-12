@@ -1,7 +1,7 @@
 import React from 'react';
-import { BookOpen, Sparkles, Clock, Radio, Palette, Search, Compass, MessageSquareQuote } from 'lucide-react';
+import { BookOpen, Sparkles, Clock, Radio, Palette, Search, Compass } from 'lucide-react';
 
-export type ActiveTab = 'catalog' | 'full-quran' | 'reader' | 'adhkar' | 'tasbeeh' | 'prayer' | 'qibla' | 'radio' | 'tafsir-chat';
+export type ActiveTab = 'catalog' | 'full-quran' | 'reader' | 'adhkar' | 'tasbeeh' | 'prayer' | 'qibla' | 'radio';
 export type AppTheme = 'parchment' | 'emerald' | 'dark';
 
 interface NavbarProps {
@@ -37,10 +37,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'reader', label: currentSurahName ? `سورة ${currentSurahName}` : 'تلاوة وتفسير', icon: BookOpen },
     { id: 'adhkar', label: 'أذكار المسلم', icon: Sparkles },
     { id: 'tasbeeh', label: 'السبحة', icon: Sparkles },
-    { id: 'prayer', label: 'مواقيت الصلاة', icon: Clock },
+    { id: 'prayer', label: 'مواقيت الصلاة والأذان', icon: Clock },
     { id: 'qibla', label: 'اتجاه القبلة', icon: Compass },
     { id: 'radio', label: 'إذاعة القرآن', icon: Radio },
-    { id: 'tafsir-chat', label: 'التفسير بالكتابة', icon: MessageSquareQuote },
   ];
 
   return (

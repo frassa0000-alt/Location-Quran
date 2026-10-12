@@ -21,22 +21,37 @@ export function playTasbeehClickSound() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
+    const t = ctx.currentTime;
+
+    // Warm bead body resonance
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1100, t);
+    osc.frequency.exponentialRampToValueAtTime(180, t + 0.05);
 
-    // Warm wooden bead click sound
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.04);
-
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.28, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.05);
 
-    osc.start();
-    osc.stop(ctx.currentTime + 0.04);
+    // Realistic bead contact impact transient
+    const clickOsc = ctx.createOscillator();
+    const clickGain = ctx.createGain();
+    clickOsc.type = 'sine';
+    clickOsc.frequency.setValueAtTime(2400, t);
+    clickOsc.frequency.exponentialRampToValueAtTime(400, t + 0.018);
+
+    clickGain.gain.setValueAtTime(0.18, t);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
+
+    clickOsc.connect(clickGain);
+    clickGain.connect(ctx.destination);
+    clickOsc.start(t);
+    clickOsc.stop(t + 0.018);
   } catch {
     // Graceful fallback
   }

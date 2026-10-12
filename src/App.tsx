@@ -13,7 +13,6 @@ import { DigitalTasbeeh } from './components/DigitalTasbeeh';
 import { PrayerTimesSection } from './components/PrayerTimesSection';
 import { QiblaCompass } from './components/QiblaCompass';
 import { QuranRadioSection } from './components/QuranRadioSection';
-import { TafsirChatSection } from './components/TafsirChatSection';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { Footer } from './components/Footer';
 import { SURAHS_LIST } from './data/surahs';
@@ -182,10 +181,6 @@ export default function App() {
         {activeTab === 'qibla' && <QiblaCompass />}
 
         {activeTab === 'radio' && <QuranRadioSection />}
-
-        {activeTab === 'tafsir-chat' && (
-          <TafsirChatSection onNavigateSurahDetail={handleSelectSurah} />
-        )}
       </main>
 
       {/* Global Search Dialog */}
