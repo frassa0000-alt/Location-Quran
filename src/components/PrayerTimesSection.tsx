@@ -160,16 +160,16 @@ export const PrayerTimesSection: React.FC = () => {
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-amiri font-bold text-amber-200">
-            مواقيت الصلاة
+          <h1 className="text-xl sm:text-2xl font-amiri font-bold text-amber-200">
+            الصلاة
           </h1>
 
           <div className="flex items-center gap-2 pt-0.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#142621] text-amber-200 border border-[#234439] font-bold text-sm">
-              <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#142621] text-amber-200 border border-[#234439] font-bold text-xs">
+              <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>{selectedCity.name}</span>
               {selectedCity.country && (
-                <span className="text-[#8EA89D] text-xs font-normal">
+                <span className="text-[#8EA89D] text-[11px] font-normal">
                   ({selectedCity.country})
                 </span>
               )}
@@ -177,21 +177,21 @@ export const PrayerTimesSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick City Selector Chips (Clean, fully visible, zero clipping) */}
-        <div className="mt-5 pt-4 border-t border-[#1C392F]">
-          <span className="text-xs text-[#8EA89D] block mb-2 font-medium">
+        {/* Quick City Selector Chips */}
+        <div className="mt-4 pt-3 border-t border-[#1C392F]">
+          <span className="text-[11px] text-[#8EA89D] block mb-1.5 font-medium">
             اختيار سريع للمدينة:
           </span>
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {quickCities.map((city) => {
               const isActive = selectedCity.name === city.name;
               return (
                 <button
                   key={city.name}
                   onClick={() => handleSelectCity(city)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500 text-stone-950 font-bold shadow-md ring-1 ring-amber-400'
+                      ? 'bg-amber-500 text-stone-950 font-bold shadow-xs ring-1 ring-amber-400'
                       : 'bg-[#142621] text-[#9FB6AC] hover:text-amber-200 hover:bg-[#1A342B] border border-[#213F34]'
                   }`}
                 >
@@ -210,15 +210,15 @@ export const PrayerTimesSection: React.FC = () => {
         secondsRemaining={currentPrayerTimes.nextPrayer.secondsRemaining}
       />
 
-      {/* 6 Prayer Times Cards for Active City */}
-      <div className="space-y-2.5">
+      {/* 6 Prayer Times Cards for Active City - Compact, simple, smaller text */}
+      <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-[#8EA89D] px-1">
-          <span className="font-bold text-[#D6E6DE]">
+          <span className="font-semibold text-[#D6E6DE]">
             صلوات اليوم في {selectedCity.name}:
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
           {prayerCards.map((card) => {
             const isNext = currentPrayerTimes.nextPrayer.id === card.id;
             const Icon = card.icon;
@@ -226,39 +226,30 @@ export const PrayerTimesSection: React.FC = () => {
             return (
               <div
                 key={card.id}
-                className={`p-4 rounded-2xl border text-center transition-all ${
+                className={`py-2.5 px-2 rounded-xl border text-center transition-all ${
                   isNext
-                    ? 'bg-[#18322A] border-amber-500/80 shadow-md ring-1 ring-amber-500/40'
+                    ? 'bg-[#18322A] border-amber-500/70 shadow-xs ring-1 ring-amber-500/30'
                     : 'bg-[#142520] border-[#213C33]'
                 }`}
               >
-                <div className="flex justify-center mb-2">
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                      isNext
-                        ? 'bg-amber-500 text-stone-950 font-bold shadow-xs'
-                        : 'bg-[#1A332B] text-amber-300'
-                    }`}
-                  >
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Icon className={`w-3.5 h-3.5 ${isNext ? 'text-amber-400' : 'text-[#8EA89D]'}`} />
+                  <span className={`text-xs font-semibold ${isNext ? 'text-amber-200' : 'text-[#EAEFEA]'}`}>
+                    {card.name}
+                  </span>
                 </div>
 
-                <h3 className="font-amiri text-base font-bold text-[#EAEFEA]">
-                  {card.name}
-                </h3>
-
-                <div className="font-mono text-lg font-bold tracking-tight text-amber-300 tabular-nums mt-1">
+                <div className="font-mono text-xs sm:text-sm font-bold tracking-tight text-amber-300 tabular-nums">
                   {card.time12}
                 </div>
 
-                <div className="mt-1 h-4 flex items-center justify-center">
-                  {isNext && (
-                    <span className="text-[11px] text-amber-400 font-bold">
-                      الأذان القادم
+                {isNext && (
+                  <div className="mt-1">
+                    <span className="inline-block text-[10px] text-amber-400 font-medium">
+                      القادم
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -269,11 +260,11 @@ export const PrayerTimesSection: React.FC = () => {
       <div className="rounded-2xl bg-[#12221D] border border-[#214237] p-4 sm:p-6 shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#1C382F]">
           <div>
-            <h2 className="text-lg sm:text-xl font-amiri font-bold text-amber-200">
-              مواقيت الصلاة في كل مكان (أبرز المدن والعواصم)
+            <h2 className="text-base sm:text-lg font-amiri font-bold text-amber-200">
+              أوقات الصلاة في المدن والعواصم
             </h2>
-            <p className="text-xs text-[#8EA89D] mt-0.5">
-              مواعيد الأذان لمختلف المدن مرتبة وواضحة بالكامل دون أي بيانات مقطوعة.
+            <p className="text-[11px] text-[#8EA89D] mt-0.5">
+              مواعيد الصلاة لمختلف المدن مرتبة وواضحة.
             </p>
           </div>
 

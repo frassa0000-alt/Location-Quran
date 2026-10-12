@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Search,
   BadgeCheck,
-  ChevronsDown,
+  ArrowDown,
 } from 'lucide-react';
 import { SURAHS_LIST, SurahMeta, BASMALA } from '../data/surahs';
 import { fetchQuranPage, fetchAyahTafsir, preloadAdjacentPages, QuranPageData, PageAyah } from '../services/quranApi';
@@ -488,122 +488,106 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
         </div>
       </div>
 
-      {/* Primary Sticky Control Bar: Zoom In/Out, Navigation, and Jump Pickers */}
-      <div className="sticky top-16 z-30 bg-[#101E1A]/95 backdrop-blur-md rounded-2xl border border-[#203D34] p-3 sm:p-4 shadow-lg flex flex-wrap items-center justify-between gap-3 text-right">
-        {/* RIGHT ZONE: Dedicated Zoom In & Zoom Out Controls (تكبير وتصغير) */}
-        <div className="flex items-center gap-1.5 bg-[#0B1713] p-1 rounded-xl border border-[#1E3A30]">
-          <span className="text-[11px] text-[#8FA89E] px-1.5 hidden sm:inline">
-            التكبير والتصغير:
-          </span>
+      {/* Primary Sticky Control Bar: Navigation, Zoom, Jump, Theme, Auto-scroll & Speed */}
+      <div className="sticky top-16 z-30 bg-[#101E1A]/95 backdrop-blur-md rounded-2xl border border-[#203D34] p-2.5 sm:p-3 shadow-lg flex flex-col gap-2.5 max-w-full overflow-hidden text-right">
+        {/* Tier 1: Page Navigation & Direct Jump Pickers (السابق، الصفحة، التالي، السورة، الجزء) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+          {/* Navigation: Prev / Page / Next */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C] text-xs font-medium"
+              title="الصفحة السابقة (سهم يمين)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span>السابق</span>
+            </button>
 
-          {/* Zoom Out Button (-) */}
-          <button
-            onClick={handleZoomOut}
-            disabled={zoomSize <= 18}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C]"
-            title="تصغير خط المصحف (اختصار: -)"
-            aria-label="تصغير خط المصحف"
-          >
-            <ZoomOut className="w-3.5 h-3.5" />
-            <span className="text-[10px] sm:text-[11px] font-normal">تصغير</span>
-          </button>
+            <div className="flex items-center gap-1 bg-[#0B1713] px-2.5 py-1.5 rounded-xl border border-[#1E3A30]">
+              <span className="text-[11px] font-bold text-[#EAEFEA]">صفحة</span>
+              <span className="text-xs font-mono font-bold text-amber-300 tabular-nums">
+                {currentPage}
+              </span>
+              <span className="text-xs text-[#7A998E]">/</span>
+              <span className="text-xs font-mono text-[#7A998E] tabular-nums">٦٠٤</span>
+            </div>
 
-          {/* Current Zoom Indicator */}
-          <div className="px-1.5 py-0.5 text-center min-w-[3.6rem]" title="حجم الخط الحالي">
-            <span className="text-[11px] font-mono font-bold text-amber-200 block leading-tight">
-              {zoomPercentage}%
-            </span>
-            <span className="text-[9px] text-[#7A998E] font-mono leading-tight block">
-              {zoomSize}px
-            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage >= 604}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C] text-xs font-medium"
+              title="الصفحة التالية (سهم يسار)"
+            >
+              <span>التالي</span>
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Zoom In Button (+) */}
-          <button
-            onClick={handleZoomIn}
-            disabled={zoomSize >= 54}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C]"
-            title="تكبير خط المصحف (اختصار: +)"
-            aria-label="تكبير خط المصحف"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-            <span className="text-[10px] sm:text-[11px] font-normal">تكبير</span>
-          </button>
-
-          {/* Reset Zoom */}
-          <button
-            onClick={handleZoomReset}
-            className="p-1 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-[#8FA89E] hover:text-amber-300 transition-colors border border-[#22483C]"
-            title="إعادة ضبط الحجم الافتراضي (اختصار: 0)"
-            aria-label="إعادة ضبط الحجم"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* CENTER ZONE: Page Turning & Jump Pickers */}
-        <div className="flex items-center gap-2">
-          {/* Previous Page (RTL: Go Right to previous page) */}
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage <= 1}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C]"
-            title="الصفحة السابقة (سهم يمين)"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[11px] font-medium">السابق</span>
-          </button>
-
-          {/* Current Page Pill (Click opens direct jump) */}
-          <div className="flex items-center gap-1 bg-[#0B1713] px-2.5 py-1.5 rounded-xl border border-[#1E3A30]">
-            <span className="text-[11px] font-bold text-[#EAEFEA]">صفحة</span>
-            <span className="text-xs font-mono font-bold text-amber-300 tabular-nums">
-              {currentPage}
-            </span>
-            <span className="text-xs text-[#7A998E]">/</span>
-            <span className="text-xs font-mono text-[#7A998E] tabular-nums">٦٠٤</span>
+          {/* Jump Buttons: Surah and Juz */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setShowSurahPicker(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-200 text-xs font-semibold border border-[#22483C] transition-colors"
+              title="الانتقال إلى سورة محددة"
+            >
+              السورة ▾
+            </button>
+            <button
+              onClick={() => setShowJuzPicker(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-200 text-xs font-semibold border border-[#22483C] transition-colors"
+              title="الانتقال إلى جزء محدد"
+            >
+              الجزء ▾
+            </button>
           </div>
-
-          {/* Next Page (RTL: Go Left to next page) */}
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage >= 604}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C]"
-            title="الصفحة التالية (سهم يسار)"
-          >
-            <span className="text-[10px] sm:text-[11px] font-normal">التالي</span>
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
         </div>
 
-        {/* LEFT ZONE: Jump Modals (Surah, Juz, Theme) */}
-        <div className="flex items-center gap-1.5">
-          {/* Jump by Surah */}
-          <button
-            onClick={() => setShowSurahPicker(true)}
-            className="px-2.5 py-1.5 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-amber-200 text-xs font-semibold border border-[#22483C] transition-colors"
-            title="الانتقال إلى سورة محددة"
-          >
-            السورة ▾
-          </button>
-
-          {/* Jump by Juz */}
-          <button
-            onClick={() => setShowJuzPicker(true)}
-            className="px-2.5 py-1.5 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-amber-200 text-xs font-semibold border border-[#22483C] transition-colors"
-            title="الانتقال إلى جزء محدد"
-          >
-            الجزء ▾
-          </button>
+        {/* Tier 2: Reading Tools (Zoom, Theme Switcher, Auto-Scroll & Speed) - محكمة تماماً على قد القائمة */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#1C382E]/70 w-full">
+          {/* Zoom In & Out */}
+          <div className="flex items-center gap-1 bg-[#0B1713] p-1 rounded-xl border border-[#1E3A30]">
+            <button
+              onClick={handleZoomOut}
+              disabled={zoomSize <= 18}
+              className="p-1 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C]"
+              title="تصغير خط المصحف"
+              aria-label="تصغير خط المصحف"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <div className="px-1.5 py-0.5 text-center min-w-[2.8rem]" title="حجم الخط الحالي">
+              <span className="text-[11px] font-mono font-bold text-amber-200 block leading-tight">
+                {zoomPercentage}%
+              </span>
+            </div>
+            <button
+              onClick={handleZoomIn}
+              disabled={zoomSize >= 54}
+              className="p-1 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C]"
+              title="تكبير خط المصحف"
+              aria-label="تكبير خط المصحف"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleZoomReset}
+              className="p-1 rounded-lg bg-[#142B23] hover:bg-[#1C3D32] text-[#8FA89E] hover:text-amber-300 transition-colors border border-[#22483C]"
+              title="إعادة ضبط الحجم"
+              aria-label="إعادة ضبط الحجم"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
+          </div>
 
           {/* Paper Theme Switcher */}
-          <div className="flex items-center gap-1 bg-[#0B1713] p-1 rounded-lg border border-[#1E3A30]">
+          <div className="flex items-center gap-1 bg-[#0B1713] p-1 rounded-xl border border-[#1E3A30]">
             <button
               onClick={() => setPaperTheme('emerald')}
-              className={`w-6 h-6 rounded-md text-[10px] font-bold transition-all ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
                 paperTheme === 'emerald'
                   ? 'bg-emerald-800 text-amber-300 ring-1 ring-amber-400'
-                  : 'bg-emerald-950 text-stone-400'
+                  : 'bg-emerald-950/60 text-stone-400'
               }`}
               title="خلفية ليلية زمردية"
             >
@@ -611,10 +595,10 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
             </button>
             <button
               onClick={() => setPaperTheme('parchment')}
-              className={`w-6 h-6 rounded-md text-[10px] font-bold transition-all ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
                 paperTheme === 'parchment'
                   ? 'bg-[#FAF5E6] text-stone-900 ring-1 ring-amber-600'
-                  : 'bg-[#E5DAC0] text-stone-700'
+                  : 'bg-[#E5DAC0]/40 text-stone-300'
               }`}
               title="ورق المصحف الأصيل (أبيض دافئ)"
             >
@@ -622,10 +606,10 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
             </button>
             <button
               onClick={() => setPaperTheme('dark')}
-              className={`w-6 h-6 rounded-md text-[10px] font-bold transition-all ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
                 paperTheme === 'dark'
                   ? 'bg-stone-900 text-amber-300 ring-1 ring-amber-400'
-                  : 'bg-black text-stone-400'
+                  : 'bg-black/60 text-stone-400'
               }`}
               title="خلفية ليلية داكنة"
             >
@@ -633,28 +617,67 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
             </button>
           </div>
 
-          {/* Auto-Scroll Toggle */}
-          <button
-            onClick={() => setIsAutoScrolling((prev) => !prev)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border shadow-xs ${
-              isAutoScrolling
-                ? 'bg-amber-500 text-stone-950 font-bold ring-2 ring-amber-300'
-                : 'bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 border-[#22483C]'
-            }`}
-            title="تمرير المصحف الشريف للأسفل تلقائياً ببطء شديد للقراءة بدون استخدام اليد"
-          >
-            {isAutoScrolling ? (
-              <>
-                <Pause className="w-3.5 h-3.5 fill-current" />
-                <span>إيقاف</span>
-              </>
-            ) : (
-              <>
-                <ChevronsDown className="w-3.5 h-3.5 animate-bounce" />
-                <span className="hidden sm:inline">تمرير تلقائي بطيء</span>
-              </>
-            )}
-          </button>
+          {/* Auto-Scroll & Speed Controls (التبطيء والتسريع مضبوط تماماً على قد القائمة ولا يخرج بره الشاشة) */}
+          <div className="inline-flex items-center gap-1 bg-[#0B1713] p-1 rounded-xl border border-[#1E3A30] max-w-full">
+            <button
+              onClick={() => setIsAutoScrolling((prev) => !prev)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                isAutoScrolling
+                  ? 'bg-amber-500 text-stone-950 font-bold shadow-xs'
+                  : 'bg-[#142B23] hover:bg-[#1C3D32] text-amber-300'
+              }`}
+              title="تمرير المصحف الشريف تلقائياً"
+            >
+              {isAutoScrolling ? (
+                <>
+                  <Pause className="w-2.5 h-2.5 fill-current" />
+                  <span>إيقاف</span>
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="w-2.5 h-2.5 text-amber-400" />
+                  <span>تمرير</span>
+                </>
+              )}
+            </button>
+
+            {/* أزرار السرعة (تبطيء وتسريع) مصغرة ومحكمة على قد القائمة */}
+            <div className="flex items-center gap-0.5 bg-[#142B23] p-0.5 rounded-lg border border-[#22483C]">
+              <button
+                onClick={() => setScrollSpeed('very-slow')}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  scrollSpeed === 'very-slow'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-[#8FA89E] hover:text-amber-200'
+                }`}
+                title="أبطأ سرعة (تبطيء)"
+              >
+                أبطأ
+              </button>
+              <button
+                onClick={() => setScrollSpeed('slow')}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  scrollSpeed === 'slow'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-[#8FA89E] hover:text-amber-200'
+                }`}
+                title="سرعة عادية"
+              >
+                عادي
+              </button>
+              <button
+                onClick={() => setScrollSpeed('medium')}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  scrollSpeed === 'medium'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-[#8FA89E] hover:text-amber-200'
+                }`}
+                title="أسرع (تسريع)"
+              >
+                أسرع
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1173,25 +1196,23 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
         </div>
       )}
 
-      {/* Floating Auto-Scroll Controls (شريط التحكم العائم المصغر بالتمرير التلقائي) */}
+      {/* Floating Auto-Scroll Controls (شريط تحكم مصغر وبسيط جداً بالتمرير التلقائي) */}
       {isAutoScrolling && (
         <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0C1A16]/95 backdrop-blur-md border border-amber-500/40 rounded-full px-2.5 py-1 shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 text-[11px] font-cairo text-[#EAEFEA] select-none"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#0C1A16]/95 backdrop-blur-md border border-amber-500/30 rounded-full px-2 py-0.5 shadow-lg flex items-center gap-1.5 text-[10px] font-cairo text-[#EAEFEA] select-none max-w-[calc(100vw-2rem)] overflow-hidden"
           dir="rtl"
         >
           {/* Status Indicator */}
-          <div className="flex items-center gap-1 pl-1.5 border-l border-[#224438]/80 shrink-0" title="التمرير البطيء يعمل تلقائياً">
-            <span className="relative flex h-2 w-2">
+          <div className="flex items-center gap-1 pl-1 border-l border-[#224438]/70 shrink-0">
+            <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
             </span>
-            <span className="text-[10px] font-bold text-amber-300 hidden sm:inline whitespace-nowrap">
-              تمرير بطيء
-            </span>
+            <span className="text-[9px] font-bold text-amber-300">تمرير</span>
           </div>
 
-          {/* Speed Selector (تبطيء وتسريع) */}
-          <div className="flex items-center bg-[#142A23] p-0.5 rounded-full border border-[#23483B]/70 shrink-0">
+          {/* Speed Selector (تبطيء وتسريع مصغر) */}
+          <div className="flex items-center bg-[#142A23] p-0.5 rounded-full border border-[#23483B]/60 shrink-0">
             <button
               onClick={() => setScrollSpeed('very-slow')}
               className={`px-1.5 py-0.5 rounded-full text-[9px] transition-colors ${
@@ -1199,7 +1220,7 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
                   ? 'bg-amber-400 text-stone-950 font-bold shadow-xs'
                   : 'text-[#8FA89E] hover:text-amber-200'
               }`}
-              title="أبطأ (سلو موشن)"
+              title="أبطأ"
             >
               أبطأ
             </button>
@@ -1210,9 +1231,9 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
                   ? 'bg-amber-400 text-stone-950 font-bold shadow-xs'
                   : 'text-[#8FA89E] hover:text-amber-200'
               }`}
-              title="مريح (الوضع العادي)"
+              title="عادي"
             >
-              مريح
+              عادي
             </button>
             <button
               onClick={() => setScrollSpeed('medium')}
@@ -1221,7 +1242,7 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
                   ? 'bg-amber-400 text-stone-950 font-bold shadow-xs'
                   : 'text-[#8FA89E] hover:text-amber-200'
               }`}
-              title="أسرع قليلاً"
+              title="أسرع"
             >
               أسرع
             </button>
@@ -1230,17 +1251,17 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
           {/* Pause Button */}
           <button
             onClick={() => setIsAutoScrolling(false)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-[10px] transition-all shadow-xs shrink-0"
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-[9px] transition-all shadow-xs shrink-0"
             title="إيقاف مؤقت للتمرير"
           >
-            <Pause className="w-2.5 h-2.5 fill-current" />
+            <Pause className="w-2 h-2 fill-current" />
             <span>إيقاف</span>
           </button>
 
           {/* Close */}
           <button
             onClick={() => setIsAutoScrolling(false)}
-            className="text-[#8FA89E] hover:text-rose-300 transition-colors p-0.5 text-xs font-bold leading-none shrink-0"
+            className="text-[#8FA89E] hover:text-rose-300 transition-colors p-0.5 text-[10px] font-bold leading-none shrink-0"
             title="إغلاق الشريط"
           >
             ✕

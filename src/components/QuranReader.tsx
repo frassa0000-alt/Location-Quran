@@ -15,7 +15,7 @@ import {
   Check,
   BadgeCheck,
   ArrowDownCircle,
-  ChevronsDown,
+  ArrowDown,
 } from 'lucide-react';
 import { SURAHS_LIST, SurahMeta, Ayah, BASMALA } from '../data/surahs';
 import { RECITERS, Reciter, getSurahAudioUrl, getAyahAudioUrl } from '../data/reciters';
@@ -372,68 +372,66 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
             </div>
           )}
 
-          {/* Slow Motion Auto-Scroll Button */}
-          <div className="inline-flex items-center gap-1 p-0.5 bg-[#101D19] rounded-xl border border-[#1C362F]">
+          {/* Auto-Scroll & Speed Controls - خيار التمرير والسرعة مصغر وبسيط على قد القائمة */}
+          <div className="inline-flex items-center gap-1 p-1 bg-[#101D19] rounded-xl border border-[#1C362F] max-w-full">
             <button
               onClick={() => setIsAutoScrolling((prev) => !prev)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shadow-xs ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all shadow-xs ${
                 isAutoScrolling
-                  ? 'bg-amber-500 text-stone-950 font-bold ring-1 ring-amber-300'
-                  : 'bg-[#18322A] text-amber-300 hover:bg-[#204237] border border-[#274E41]'
+                  ? 'bg-amber-500 text-stone-950 font-bold'
+                  : 'bg-[#18322A] text-amber-300 hover:bg-[#204237]'
               }`}
-              title="تمرير الصفحة للأسفل تلقائياً ببطء شديد دون استخدام اليد"
+              title="تمرير الصفحة تلقائياً"
             >
               {isAutoScrolling ? (
                 <>
-                  <Pause className="w-3 h-3 fill-current" />
+                  <Pause className="w-2.5 h-2.5 fill-current" />
                   <span>إيقاف</span>
                 </>
               ) : (
                 <>
-                  <ChevronsDown className="w-3 h-3" />
-                  <span>تمرير تلقائي</span>
+                  <ArrowDown className="w-2.5 h-2.5 text-amber-400" />
+                  <span>تمرير</span>
                 </>
               )}
             </button>
 
-            {/* Quick Speed Switcher */}
-            {isAutoScrolling && (
-              <div className="flex items-center gap-0.5 pr-0.5 border-r border-[#1F3D32]">
-                <button
-                  onClick={() => setScrollSpeed('very-slow')}
-                  className={`px-1.5 py-0.5 rounded text-[9px] transition-colors ${
-                    scrollSpeed === 'very-slow'
-                      ? 'bg-amber-400 text-stone-950 font-bold'
-                      : 'text-[#8FA89E] hover:text-amber-200'
-                  }`}
-                  title="أبطأ سرعة"
-                >
-                  أبطأ
-                </button>
-                <button
-                  onClick={() => setScrollSpeed('slow')}
-                  className={`px-1.5 py-0.5 rounded text-[9px] transition-colors ${
-                    scrollSpeed === 'slow'
-                      ? 'bg-amber-400 text-stone-950 font-bold'
-                      : 'text-[#8FA89E] hover:text-amber-200'
-                  }`}
-                  title="سرعة مريحة عادية"
-                >
-                  عادي
-                </button>
-                <button
-                  onClick={() => setScrollSpeed('medium')}
-                  className={`px-1.5 py-0.5 rounded text-[9px] transition-colors ${
-                    scrollSpeed === 'medium'
-                      ? 'bg-amber-400 text-stone-950 font-bold'
-                      : 'text-[#8FA89E] hover:text-amber-200'
-                  }`}
-                  title="أسرع"
-                >
-                  أسرع
-                </button>
-              </div>
-            )}
+            {/* Quick Speed Switcher (تبطيء وتسريع مصغر وبسيط على قد القائمة) */}
+            <div className="flex items-center gap-0.5 bg-[#142A23] p-0.5 rounded-lg border border-[#22483C]">
+              <button
+                onClick={() => setScrollSpeed('very-slow')}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  scrollSpeed === 'very-slow'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-[#8FA89E] hover:text-amber-200'
+                }`}
+                title="أبطأ سرعة (تبطيء)"
+              >
+                أبطأ
+              </button>
+              <button
+                onClick={() => setScrollSpeed('slow')}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  scrollSpeed === 'slow'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-[#8FA89E] hover:text-amber-200'
+                }`}
+                title="سرعة عادية"
+              >
+                عادي
+              </button>
+              <button
+                onClick={() => setScrollSpeed('medium')}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  scrollSpeed === 'medium'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-[#8FA89E] hover:text-amber-200'
+                }`}
+                title="أسرع (تسريع)"
+              >
+                أسرع
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -886,7 +884,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
       {/* Floating Auto-Scroll Controls (شريط التحكم العائم المصغر بالتمرير التلقائي) */}
       {isAutoScrolling && (
         <div
-          className="fixed bottom-14 sm:bottom-16 left-1/2 -translate-x-1/2 z-50 bg-[#0C1A16]/95 backdrop-blur-md border border-amber-500/40 rounded-full px-2.5 py-1 shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 text-[11px] font-cairo text-[#EAEFEA] select-none"
+          className="fixed bottom-14 sm:bottom-16 left-1/2 -translate-x-1/2 z-50 bg-[#0C1A16]/95 backdrop-blur-md border border-amber-500/40 rounded-full px-2.5 py-1 shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 text-[11px] font-cairo text-[#EAEFEA] select-none max-w-[calc(100vw-2rem)] overflow-hidden"
           dir="rtl"
         >
           {/* Status Indicator */}
