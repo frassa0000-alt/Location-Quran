@@ -15,7 +15,9 @@ import { QiblaCompass } from './components/QiblaCompass';
 import { QuranRadioSection } from './components/QuranRadioSection';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { Footer } from './components/Footer';
+import { QuranSplashIntro } from './components/QuranSplashIntro';
 import { SURAHS_LIST } from './data/surahs';
+import { ChevronUp } from 'lucide-react';
 
 interface Bookmark {
   surahNumber: number;
@@ -29,6 +31,8 @@ export default function App() {
   const [currentSurahNumber, setCurrentSurahNumber] = useState<number>(1);
   const [targetAyahNumber, setTargetAyahNumber] = useState<number>(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Theme & Typography settings
   const [theme, setTheme] = useState<AppTheme>(() => {
@@ -78,6 +82,19 @@ export default function App() {
     }
   }, [fontSize]);
 
+  // Track scroll position for back to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 350) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleSelectSurah = (surahNumber: number, startAyah: number = 1) => {
     setCurrentSurahNumber(surahNumber);
     setTargetAyahNumber(startAyah);
@@ -112,17 +129,24 @@ export default function App() {
   // Determine root theme styles
   const getThemeClasses = () => {
     if (theme === 'dark') {
-      return 'dark bg-[#08100E] text-[#EAEFEA]';
+      return 'dark bg-[#050C0A] text-[#EAEFEA]';
     }
     if (theme === 'emerald') {
-      return 'dark bg-[#0D1714] text-[#EAEFEA]';
+      return 'dark bg-gradient-to-b from-[#060D0A] via-[#091612] to-[#050C0A] text-[#EAEFEA]';
     }
     // warm night mus'haf
-    return 'dark bg-[#111D19] text-[#EAEFEA]';
+    return 'dark bg-gradient-to-b from-[#0B1512] via-[#0E1B17] to-[#08120F] text-[#EAEFEA]';
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-200 ${getThemeClasses()}`} dir="rtl">
+    <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-300 relative ${getThemeClasses()}`} dir="rtl">
+      {/* Ambient Luxury Islamic Lighting in Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.14),transparent_70%)] blur-3xl" />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.07),transparent_70%)] blur-3xl" />
+        <div className="absolute bottom-10 -left-40 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.09),transparent_70%)] blur-3xl" />
+      </div>
+
       {/* Navigation Top Bar */}
       <Navbar
         activeTab={activeTab}
@@ -198,6 +222,23 @@ export default function App() {
         }}
         onNavigateSurah={(num) => handleSelectSurah(num, 1)}
       />
+
+      {/* Floating Back-to-Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 left-6 z-40 p-3 rounded-2xl bg-[#132821]/90 hover:bg-[#1B382E] text-amber-300 border border-amber-500/30 shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95 group"
+          title="العودة لأعلى الصفحة"
+          aria-label="العودة لأعلى الصفحة"
+        >
+          <ChevronUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+        </button>
+      )}
+
+      {/* Website Entrance Splash Screen */}
+      {showSplash && (
+        <QuranSplashIntro onFinish={() => setShowSplash(false)} />
+      )}
     </div>
   );
 }

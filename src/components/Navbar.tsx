@@ -35,34 +35,35 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md border-b border-[#1C362F] bg-[#101E1A]/95 text-[#EAEFEA] shadow-md">
+    <header className="sticky top-0 z-40 backdrop-blur-xl border-b border-amber-500/20 bg-[#07130F]/90 text-[#EAEFEA] shadow-xl relative">
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Zone 1: Brand title wordmark */}
         <button
           onClick={() => setActiveTab('catalog')}
-          className="flex items-center gap-2.5 text-right group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-lg"
+          className="flex items-center gap-3 text-right group focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-xl transition-all"
           aria-label="الرئيسية - القرآن الكريم"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-800 text-amber-300 flex items-center justify-center shadow-md border border-[#274E41]">
-            <span className="font-amiri font-bold text-lg select-none">ق</span>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-950 text-amber-300 flex items-center justify-center shadow-lg border border-amber-400/40 group-hover:scale-105 group-hover:border-amber-300 transition-all">
+            <BookOpen className="w-5 h-5 text-amber-300 fill-amber-400/25" />
           </div>
-          <span className="font-amiri font-bold text-2xl tracking-wide text-amber-200 group-hover:text-amber-300 transition-colors">
+          <span className="font-amiri font-bold text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-300 to-amber-200 group-hover:from-white group-hover:to-amber-200 transition-all">
             القرآن الكريم
           </span>
         </button>
 
         {/* Zone 2: Navigation links */}
-        <nav className="hidden lg:flex items-center gap-1 text-xs font-medium">
+        <nav className="hidden lg:flex items-center gap-1.5 text-xs font-medium">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all duration-150 ${
+                className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 hover-pulse-slow ${
                   isActive
-                    ? 'bg-[#18352C] text-amber-300 border border-amber-500/60 shadow-xs font-bold'
-                    : 'text-[#92AAA1] hover:text-[#EAEFEA] hover:bg-[#142621]'
+                    ? 'bg-gradient-to-r from-amber-500/20 via-[#18392F] to-emerald-500/20 text-amber-300 border border-amber-500/60 shadow-inner font-bold'
+                    : 'text-[#92AAA1] hover:text-[#EAEFEA] hover:bg-[#122821]/80 hover:border-amber-500/30 border border-transparent'
                 }`}
               >
                 {item.label}
@@ -76,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Quick Search */}
           <button
             onClick={onOpenSearch}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#142621] text-[#92AAA1] hover:text-[#EAEFEA] hover:bg-[#1A332C] border border-[#203C34] transition-colors"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#10241E]/90 hover:bg-[#17372D] text-amber-200 hover:text-white border border-amber-500/30 hover:border-amber-400/60 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 hover-pulse-slow"
             title="بحث في السور والآيات"
           >
             <Search className="w-3.5 h-3.5 text-amber-400" />
@@ -86,17 +87,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Mobile Sub-Navigation Bar */}
-      <div className="lg:hidden border-t border-[#1C362F] bg-[#101E1A] px-3 py-2 overflow-x-auto flex items-center gap-2 scrollbar-none">
+      <div className="lg:hidden border-t border-amber-500/15 bg-[#091712]/95 backdrop-blur-md px-3 py-2.5 overflow-x-auto flex items-center gap-2 scrollbar-none">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`px-3 py-1.5 text-xs rounded-lg whitespace-nowrap transition-colors shrink-0 ${
+              className={`px-3 py-1.5 text-xs rounded-xl whitespace-nowrap transition-all shrink-0 hover-pulse-slow ${
                 isActive
-                  ? 'bg-[#18352C] text-amber-300 font-bold border border-amber-500/60 shadow-xs'
-                  : 'text-[#8FA89E] hover:text-[#EAEFEA]'
+                  ? 'bg-gradient-to-r from-amber-500/20 via-[#18392F] to-emerald-500/20 text-amber-300 font-bold border border-amber-500/60 shadow-inner'
+                  : 'text-[#8FA89E] hover:text-[#EAEFEA] hover:bg-[#122821]/60'
               }`}
             >
               {item.label}

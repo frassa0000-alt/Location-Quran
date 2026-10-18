@@ -45,26 +45,34 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
   return (
     <div className="space-y-8 pb-12">
       {/* Editorial Sacred Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c241c] via-[#123126] to-[#0a1814] text-[#EAEFEA] p-6 sm:p-10 shadow-xl border border-[#214336]">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none bg-[radial-gradient(#fbbf24_1px,transparent_1px)] [background-size:16px_16px]" />
-        
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#071912] via-[#0E291F] to-[#06140E] text-[#EAEFEA] p-7 sm:p-12 shadow-2xl border border-amber-500/30 transition-all">
+        {/* Subtle animated background radial light */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-15 pointer-events-none bg-[radial-gradient(#fbbf24_1px,transparent_1px)] [background-size:20px_20px]" />
+        <div className="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none animate-pulse-glow" />
+        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+
         <div className="relative z-10 max-w-3xl">
-          <span className="text-xs uppercase tracking-widest text-amber-300 font-semibold block mb-2">
-            كتاب الله العزيز · نور وهداية للعالمين
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-amiri font-bold mb-3 tracking-wide text-amber-200">
+          <div className="flex flex-wrap items-center gap-2.5 mb-3.5">
+            <span className="text-xs uppercase tracking-widest text-amber-300 font-bold block">
+              كتاب الله العزيز · نور وهداية للعالمين
+            </span>
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/40 font-bold">
+              الإصدار المطور
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-amiri font-bold mb-3.5 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-300 to-amber-200">
             القرآن الكريم وترتيل الآيات
           </h1>
-          <p className="text-[#b5cbbf] text-sm sm:text-base leading-relaxed mb-6 font-cairo">
+          <p className="text-[#AEC7BD] text-sm sm:text-base leading-relaxed mb-7 font-cairo">
             تصفح جميع سور القرآن الكريم الـ ١١٤، استمع بأعذب أصوات كبار القراء، واطلع على التفسير الميسر لكل آية مع حفظ موضع تلاوتك.
           </p>
 
           {/* Actions: Full Quran Manual Reading & Last Read */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 pt-1">
             {onOpenFullMushaf && (
               <button
                 onClick={onOpenFullMushaf}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-stone-950 font-bold text-xs sm:text-sm shadow-lg transition-all active:scale-95"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-bold text-xs sm:text-sm shadow-xl transition-all hover:scale-105 active:scale-95"
               >
                 <BookOpen className="w-4 h-4 fill-current" />
                 <span>المصحف الشريف</span>
@@ -72,7 +80,7 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
             )}
 
             {lastReadBookmark && (
-              <div className="inline-flex items-center gap-2.5 p-2 sm:px-3 sm:py-2 rounded-xl bg-[#142921]/90 backdrop-blur-md border border-[#2a5041] text-white shadow-md">
+              <div className="inline-flex items-center gap-3 p-2.5 sm:px-4 sm:py-2 rounded-2xl bg-[#0C1D17]/90 backdrop-blur-md border border-amber-500/35 text-white shadow-lg">
                 <BookMarked className="w-4 h-4 text-amber-400 shrink-0" />
                 <div className="text-right">
                   <span className="text-[11px] text-[#8ea89d] block leading-tight">آخر موضع:</span>
@@ -82,7 +90,7 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
                 </div>
                 <button
                   onClick={() => onSelectSurah(lastReadBookmark.surahNumber, lastReadBookmark.ayahNumber)}
-                  className="mr-1 px-2.5 py-1 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-lg transition-colors shadow-xs"
+                  className="mr-1 px-3 py-1 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-xl transition-all shadow-xs hover:scale-105 active:scale-95"
                 >
                   متابعة
                 </button>
@@ -92,23 +100,47 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
         </div>
       </div>
 
+      {/* Featured Daily Ayah Card */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#11241D] via-[#152F26] to-[#11241D] border border-amber-500/30 p-5 sm:p-6 shadow-md text-right">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1.5 flex-1">
+            <div className="flex items-center gap-2 text-xs text-amber-400 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span>آية وتدبر</span>
+            </div>
+            <p className="font-amiri text-lg sm:text-2xl text-amber-100 font-bold leading-relaxed">
+              «أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ»
+            </p>
+            <p className="text-xs text-[#8BA79C]">
+              سورة الرعد · الآية ٢٨
+            </p>
+          </div>
+          <button
+            onClick={() => onSelectSurah(13, 28)}
+            className="px-3.5 py-1.5 rounded-xl bg-[#1A382D] hover:bg-[#224A3B] border border-amber-500/40 text-amber-200 text-xs font-bold transition-all hover:scale-105 active:scale-95 shrink-0"
+          >
+            تلاوة وتفسير الآية
+          </button>
+        </div>
+      </div>
+
       {/* Control Strip: Search & Filter Tabs */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A988E]" />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/70" />
             <input
               type="text"
               placeholder="ابحث باسم السورة، رقمها، أو معناها..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pr-10 pl-4 py-2.5 text-sm rounded-xl bg-[#132420] border border-[#223E36] focus:outline-none focus:ring-2 focus:ring-amber-500/60 text-[#EAEFEA] placeholder:text-[#7A988E]"
+              className="w-full pr-11 pl-4 py-3 text-sm rounded-2xl bg-[#0D1D18]/90 backdrop-blur-md border border-amber-500/25 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20 text-[#EAEFEA] placeholder:text-[#6F8F84] shadow-inner transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#7A988E] hover:text-[#EAEFEA] px-1"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[#7A988E] hover:text-[#EAEFEA] px-1.5 py-0.5 rounded-md hover:bg-[#1A332A]"
               >
                 مسح
               </button>
@@ -116,43 +148,43 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
           </div>
 
           {/* Revelation Filter Segmented Buttons */}
-          <div className="flex flex-wrap items-center gap-1 p-1 bg-[#101D19] rounded-xl border border-[#1C362F]">
+          <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#0A1612]/90 backdrop-blur-md rounded-2xl border border-amber-500/20 shadow-md">
             <button
               onClick={() => setFilterType('all')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
                 filterType === 'all'
-                  ? 'bg-[#1C3A31] text-amber-300 border border-[#2D5447] shadow-xs font-bold'
-                  : 'text-[#8FA89E] hover:text-[#EAEFEA]'
+                  ? 'bg-gradient-to-r from-amber-500/25 via-[#193A2F] to-emerald-600/25 text-amber-300 border border-amber-500/50 shadow-inner font-bold'
+                  : 'text-[#8FA89E] hover:text-[#EAEFEA] hover:bg-[#122820]'
               }`}
             >
               الكل (١١٤)
             </button>
             <button
               onClick={() => setFilterType('meccan')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
                 filterType === 'meccan'
-                  ? 'bg-[#1C3A31] text-amber-300 border border-[#2D5447] shadow-xs font-bold'
-                  : 'text-[#8FA89E] hover:text-[#EAEFEA]'
+                  ? 'bg-gradient-to-r from-amber-500/25 via-[#193A2F] to-emerald-600/25 text-amber-300 border border-amber-500/50 shadow-inner font-bold'
+                  : 'text-[#8FA89E] hover:text-[#EAEFEA] hover:bg-[#122820]'
               }`}
             >
               مكية (٨٦)
             </button>
             <button
               onClick={() => setFilterType('medinan')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
                 filterType === 'medinan'
-                  ? 'bg-[#1C3A31] text-amber-300 border border-[#2D5447] shadow-xs font-bold'
-                  : 'text-[#8FA89E] hover:text-[#EAEFEA]'
+                  ? 'bg-gradient-to-r from-amber-500/25 via-[#193A2F] to-emerald-600/25 text-amber-300 border border-amber-500/50 shadow-inner font-bold'
+                  : 'text-[#8FA89E] hover:text-[#EAEFEA] hover:bg-[#122820]'
               }`}
             >
               مدنية (٢٨)
             </button>
             <button
               onClick={() => setFilterType('popular')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
                 filterType === 'popular'
-                  ? 'bg-[#1C3A31] text-amber-300 border border-[#2D5447] shadow-xs font-bold'
-                  : 'text-[#8FA89E] hover:text-[#EAEFEA]'
+                  ? 'bg-gradient-to-r from-amber-500/25 via-[#193A2F] to-emerald-600/25 text-amber-300 border border-amber-500/50 shadow-inner font-bold'
+                  : 'text-[#8FA89E] hover:text-[#EAEFEA] hover:bg-[#122820]'
               }`}
             >
               السور الشائعة
@@ -162,15 +194,15 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
 
         {/* Quick Juz Scroller */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
-          <span className="text-[#7A988E] shrink-0 font-medium ml-1">
+          <span className="text-amber-400/80 shrink-0 font-bold ml-1">
             الأجزاء:
           </span>
           <button
             onClick={() => setSelectedJuz('all')}
-            className={`px-2.5 py-1 rounded-md shrink-0 transition-colors ${
+            className={`px-3 py-1.5 rounded-xl shrink-0 transition-all font-semibold ${
               selectedJuz === 'all'
-                ? 'bg-[#1C3A31] text-amber-300 font-semibold border border-[#2D5447]'
-                : 'bg-[#132420] text-[#8FA89E] hover:text-[#EAEFEA] border border-[#1E3730]'
+                ? 'bg-[#1D3E33] text-amber-300 border border-amber-500/50 shadow-xs'
+                : 'bg-[#0E1E19]/80 text-[#8FA89E] hover:text-[#EAEFEA] hover:border-amber-500/30 border border-[#1E3730]'
             }`}
           >
             كل الأجزاء
@@ -179,10 +211,10 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
             <button
               key={juz}
               onClick={() => setSelectedJuz(juz)}
-              className={`px-2.5 py-1 rounded-md shrink-0 transition-colors ${
+              className={`px-3 py-1.5 rounded-xl shrink-0 transition-all font-semibold ${
                 selectedJuz === juz
-                  ? 'bg-[#1C3A31] text-amber-300 font-semibold border border-[#2D5447]'
-                  : 'bg-[#132420] text-[#8FA89E] hover:text-[#EAEFEA] border border-[#1E3730]'
+                  ? 'bg-[#1D3E33] text-amber-300 border border-amber-500/50 shadow-xs'
+                  : 'bg-[#0E1E19]/80 text-[#8FA89E] hover:text-[#EAEFEA] hover:border-amber-500/30 border border-[#1E3730]'
               }`}
             >
               الجزء {juz}
@@ -193,7 +225,7 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
 
       {/* Surahs Grid */}
       {filteredSurahs.length === 0 ? (
-        <div className="text-center py-16 bg-[#132420] rounded-2xl border border-[#213B33]">
+        <div className="text-center py-16 bg-[#0E1E19]/90 rounded-2xl border border-amber-500/20">
           <p className="text-[#8FA89E] font-medium text-base mb-2">
             لم يتم العثور على سور مطابقة للبحث
           </p>
@@ -209,27 +241,30 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSurahs.map((surah) => {
             const isMeccan = surah.revelationType === 'Meccan';
             return (
               <div
                 key={surah.number}
-                className="group relative bg-[#142520] hover:bg-[#1A312B] rounded-2xl p-4 border border-[#213C33] hover:border-amber-500/50 transition-all duration-200 hover:shadow-lg flex flex-col justify-between gap-3 text-right"
+                className="group relative bg-gradient-to-b from-[#10241E]/95 via-[#0C1C17]/95 to-[#081511]/95 backdrop-blur-md rounded-2xl p-5 border border-amber-500/20 hover:border-amber-400/60 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-black/60 flex flex-col justify-between gap-3.5 text-right overflow-hidden"
               >
+                {/* Top Subtle Hairline Sheen */}
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/30 to-transparent pointer-events-none group-hover:via-amber-300/70 transition-colors" />
+
                 {/* Upper Row: Number Badge, Surah Name & Revelation Type */}
                 <div
                   onClick={() => onSelectSurah(surah.number)}
                   className="flex items-center justify-between gap-3 cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     {/* Decorative Number Badge */}
-                    <div className="w-10 h-10 rounded-xl bg-[#1B322B] text-amber-300 group-hover:bg-amber-500 group-hover:text-stone-950 flex items-center justify-center font-mono tabular-nums text-sm font-bold transition-colors shrink-0 border border-[#294B40] shadow-xs">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#1A3D31] to-[#0F261E] text-amber-300 group-hover:from-amber-500 group-hover:to-amber-600 group-hover:text-stone-950 flex items-center justify-center font-mono tabular-nums text-sm font-bold transition-all duration-300 shrink-0 border border-amber-500/40 shadow-md group-hover:scale-105">
                       {surah.number}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-amiri text-xl sm:text-[22px] font-bold text-amber-200 group-hover:text-amber-300 transition-colors leading-snug truncate">
+                      <h3 className="font-amiri text-2xl font-bold text-amber-100 group-hover:text-amber-300 transition-colors leading-snug truncate">
                         سُورَةُ {surah.name}
                       </h3>
                       <p className="text-[11px] text-[#7A988E] font-cairo truncate">
@@ -238,18 +273,18 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
                     </div>
                   </div>
 
-                  <span className="text-[11px] px-2 py-0.5 rounded-md bg-[#193229] text-[#A3BCB2] border border-[#234539] shrink-0 font-cairo">
+                  <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#132E24]/90 text-amber-200/90 border border-amber-500/30 shrink-0 font-cairo shadow-2xs">
                     {isMeccan ? 'مكية' : 'مدنية'}
                   </span>
                 </div>
 
                 {/* Lower Row: Prominently Visible 'الجزء' & Ayah count on right, Action Buttons on left */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-[#1C362E] gap-2">
+                <div className="flex items-center justify-between pt-3 border-t border-amber-500/15 gap-2">
                   <div className="flex items-center gap-2 text-xs font-cairo">
-                    <span className="px-2.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
                       الجزء {surah.juz}
                     </span>
-                    <span className="text-[#8FA89E]">
+                    <span className="text-[#8FA89E] text-xs">
                       {surah.ayahCount} آية
                     </span>
                   </div>
@@ -261,7 +296,7 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
                         e.stopPropagation();
                         onQuickPlaySurah(surah.number);
                       }}
-                      className="w-8 h-8 rounded-lg text-amber-400 hover:text-amber-300 hover:bg-[#1E3B30] border border-transparent hover:border-[#274E40] transition-colors flex items-center justify-center shrink-0"
+                      className="w-8 h-8 rounded-xl text-amber-400 hover:text-stone-950 hover:bg-amber-400 border border-amber-500/30 hover:border-amber-300 transition-all flex items-center justify-center shrink-0 shadow-xs active:scale-95"
                       title={`استماع لتلاوة سورة ${surah.name}`}
                       aria-label={`استماع لتلاوة سورة ${surah.name}`}
                     >
@@ -270,11 +305,11 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
 
                     <button
                       onClick={() => onSelectSurah(surah.number)}
-                      className="h-8 px-2.5 rounded-lg text-xs font-semibold font-cairo text-amber-200 bg-[#1A342B] hover:bg-[#224438] hover:text-amber-100 border border-[#274E40] transition-colors inline-flex items-center justify-center gap-1.5 shrink-0 min-w-[76px]"
+                      className="h-8 px-3 rounded-xl text-xs font-bold font-cairo text-amber-200 bg-[#16332A] hover:bg-amber-400 hover:text-stone-950 border border-amber-500/40 transition-all inline-flex items-center justify-center gap-1.5 shrink-0 shadow-xs active:scale-95 min-w-[76px]"
                       title={`قراءة وتفسير سورة ${surah.name}`}
                     >
-                      <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span className="leading-none pt-0.5 font-bold">قراءة</span>
+                      <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                      <span className="leading-none pt-0.5">قراءة</span>
                     </button>
                   </div>
                 </div>

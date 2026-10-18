@@ -1,4 +1,5 @@
 import React from 'react';
+import { BookOpen } from 'lucide-react';
 import { ActiveTab } from './Navbar';
 
 interface FooterProps {
@@ -8,15 +9,16 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigateTab, onNavigateSurah }) => {
   return (
-    <footer className="border-t border-[#1C362F] bg-[#0A1612] text-[#8FA89E] py-10 px-4 sm:px-8 text-right font-cairo">
+    <footer className="border-t border-amber-500/20 bg-[#050E0B] text-[#8FA89E] py-12 px-4 sm:px-8 text-right font-cairo relative overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none" />
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Brand & Mission */}
-        <div className="space-y-2 md:col-span-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-800 text-amber-300 flex items-center justify-center font-amiri font-bold text-sm shadow-xs border border-[#234A3C]">
-              ق
+        <div className="space-y-3 md:col-span-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-900 text-amber-300 flex items-center justify-center shadow-md border border-amber-500/40">
+              <BookOpen className="w-4 h-4 text-amber-300 fill-amber-400/25" />
             </div>
-            <span className="font-amiri font-bold text-xl text-amber-200">
+            <span className="font-amiri font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-300 to-amber-200">
               القرآن الكريم (Quran)
             </span>
           </div>
