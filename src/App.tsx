@@ -126,25 +126,24 @@ export default function App() {
 
   const currentSurahMeta = SURAHS_LIST.find((s) => s.number === currentSurahNumber);
 
-  // Determine root theme styles
+  // Determine root theme styles - Modern, clean, lightweight midnight palette
   const getThemeClasses = () => {
     if (theme === 'dark') {
-      return 'dark bg-[#050C0A] text-[#EAEFEA]';
+      return 'dark bg-[#080B0E] text-[#F1F5F9]';
     }
     if (theme === 'emerald') {
-      return 'dark bg-gradient-to-b from-[#060D0A] via-[#091612] to-[#050C0A] text-[#EAEFEA]';
+      return 'dark bg-[#0A0E13] text-[#F1F5F9]';
     }
     // warm night mus'haf
-    return 'dark bg-gradient-to-b from-[#0B1512] via-[#0E1B17] to-[#08120F] text-[#EAEFEA]';
+    return 'dark bg-[#0C1016] text-[#F1F5F9]';
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-300 relative ${getThemeClasses()}`} dir="rtl">
-      {/* Ambient Luxury Islamic Lighting in Background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.14),transparent_70%)] blur-3xl" />
-        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.07),transparent_70%)] blur-3xl" />
-        <div className="absolute bottom-10 -left-40 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.09),transparent_70%)] blur-3xl" />
+    <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-200 relative ${getThemeClasses()}`} dir="rtl">
+      {/* Ambient Soft Glow with High-Performance Color Shift */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+        <div className="ambient-soft-glow absolute -top-[15%] left-1/2 -translate-x-1/2 w-[950px] h-[600px] rounded-full blur-[110px]" />
+        <div className="ambient-soft-glow-bottom absolute -bottom-[15%] right-1/4 w-[800px] h-[550px] rounded-full blur-[120px]" />
       </div>
 
       {/* Navigation Top Bar */}

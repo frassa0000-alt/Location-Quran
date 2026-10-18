@@ -265,9 +265,9 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
   };
 
   return (
-    <div className={`space-y-6 transition-all duration-300 ${isAudioBarMinimized ? 'pb-14' : 'pb-28'}`}>
+    <div className="space-y-6 transition-all duration-300 pb-16">
       {/* Surah Header & Navigation Bar */}
-      <div className="bg-[#142520] rounded-2xl p-6 sm:p-8 border border-[#213C33] shadow-lg text-center relative overflow-hidden">
+      <div className="bg-[#0D1217] rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-md text-center relative overflow-hidden">
         {/* Subtle decorative top border */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-600 via-amber-500 to-teal-600" />
 
@@ -483,7 +483,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
                 ref={isPlayingThisAyah ? activeAyahRef : null}
                 className={`group p-5 sm:p-6 rounded-2xl border transition-all duration-200 ${
                   isPlayingThisAyah
-                    ? 'bg-[#18322A] border-amber-500/80 shadow-lg ring-1 ring-amber-500/30'
+                    ? 'bg-[#18322A] border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.25)] ring-2 ring-yellow-400/50'
                     : 'bg-[#142520] hover:bg-[#182F28] border-[#213C33] hover:border-amber-500/40 shadow-sm'
                 }`}
               >
@@ -504,8 +504,8 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
                       onClick={() => playAyahDirectly(ayah.number)}
                       className={`p-1.5 rounded-lg transition-colors ${
                         isPlayingThisAyah
-                          ? 'bg-amber-500 text-stone-950 font-bold'
-                          : 'hover:bg-[#1F3C33] text-amber-300/80 hover:text-amber-300'
+                          ? 'bg-yellow-400 text-stone-950 font-bold shadow-xs'
+                          : 'hover:bg-[#1F3C33] text-yellow-300/80 hover:text-yellow-300'
                       }`}
                       title="استماع لهذه الآية"
                     >
@@ -700,8 +700,8 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
         </div>
       )}
 
-      {/* Floating Bottom Audio Reciter Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#101E1A]/95 backdrop-blur-md border-t border-[#1F3A32] shadow-2xl text-[#EAEFEA] transition-all duration-300">
+      {/* Floating Bottom Audio Reciter Bar - قائمة تشغيل الآية صفراء ومنظمة وبسيطة */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 text-stone-950 border-t-2 border-yellow-500 shadow-[0_-4px_25px_rgba(234,179,8,0.25)] transition-all duration-200">
         <audio
           ref={audioRef}
           src={currentAudioSource}
@@ -712,179 +712,135 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
           }}
         />
 
-        {/* Minimized Bar View (Ultra compact, low profile) */}
-        {isAudioBarMinimized ? (
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2 text-right">
-            {/* Quick Info & Reciter name */}
-            <div className="flex items-center gap-2 truncate">
-              <span className="flex h-2 w-2 relative shrink-0">
-                {isPlaying && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${isPlaying ? 'bg-amber-400' : 'bg-[#537367]'}`}></span>
-              </span>
-              <span className="text-xs text-amber-200 font-bold truncate font-cairo">
-                {selectedReciter.name}
-              </span>
-              <span className="text-xs text-[#8FA89E] hidden xs:inline truncate">
-                · سورة {currentSurah.name}
-                {audioPlaybackMode === 'ayah' && ` (الآية ${activeAyahNumber})`}
-              </span>
-            </div>
-
-            {/* Quick Actions & Expand Button */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Quick Play/Pause */}
-              <button
-                onClick={togglePlayPause}
-                className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 flex items-center justify-center shadow-md transition-transform active:scale-95"
-                title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-                aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-              >
-                {isPlaying ? (
-                  <Pause className="w-3.5 h-3.5 fill-current" />
-                ) : (
-                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                )}
-              </button>
-
-              {/* Expand Bar Button */}
-              <button
-                onClick={() => setIsAudioBarMinimized(false)}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-[#172D26] hover:bg-[#203D33] text-amber-300 rounded-lg border border-[#2D5347] transition-colors"
-                title="تكبير وتوسيع شريط الصوت وقائمة المشايخ"
-              >
-                <span>تكبير الشريط</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Full Expanded Bar View */
-          <div className="px-4 sm:px-8 py-3">
-            {/* Minimize handle bar on top */}
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#1A332B]/80">
-              <div className="flex items-center gap-1.5 text-[11px] text-[#8FA89E] font-cairo">
-                <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-                <span>مشغّل التلاوة القرآنية وأصوات الشيوخ</span>
-              </div>
-              <button
-                onClick={() => setIsAudioBarMinimized(true)}
-                className="flex items-center gap-1 px-2 py-0.5 text-xs text-[#8FA89E] hover:text-amber-200 hover:bg-[#162B24] rounded-md transition-colors"
-                title="تصغير شريط الصوت لأسفل الشاشة لتوفير المساحة"
-              >
-                <span>تصغير الشريط لأسفل</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-right">
-              {/* Right Zone: Current Reciter & Playing Target */}
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                <div className="text-right">
-                  <span className="text-xs text-[#8FA89E] block font-cairo">
-                    {audioPlaybackMode === 'ayah' ? (
-                      <>
-                        <span className="text-amber-400 font-bold">الآية {activeAyahNumber}</span> من سورة
-                      </>
-                    ) : (
-                      'تلاوة كاملة لـ'
-                    )}
-                  </span>
-                  <span className="text-sm font-bold text-amber-200 font-amiri">
-                    سورة {currentSurah.name}
-                  </span>
-                </div>
-
-                {/* Reciter Selector with enhanced clarity */}
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2">
+          {/* Main Layout: Separated neatly on mobile & desktop */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+            
+            {/* 1. قسم اختيار الشيخ والآية (منفصل بوضوح تام عن أزرار الصوت) */}
+            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2">
+              {/* اختيار الشيخ */}
+              <div className="flex items-center gap-1.5 bg-stone-950 text-amber-300 rounded-xl px-2.5 py-1.5 border border-stone-800 shadow-xs">
+                <span className="text-[11px] font-bold text-amber-400 select-none shrink-0">الشيخ:</span>
                 <select
                   value={selectedReciter.id}
                   onChange={(e) => {
                     const reciter = RECITERS.find((r) => r.id === e.target.value) || RECITERS[0];
                     setSelectedReciter(reciter);
                   }}
-                  className="text-xs bg-[#162923] border border-[#27473C] rounded-lg px-2.5 py-1.5 text-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-400 max-w-[200px] truncate"
-                  title="اختر القارئ أو الشيخ"
+                  className="text-xs bg-transparent text-amber-200 font-bold focus:outline-none cursor-pointer max-w-[130px] sm:max-w-[150px] truncate"
+                  title="اختر الشيخ / القارئ"
                 >
                   {RECITERS.map((r) => (
-                    <option key={r.id} value={r.id} className="bg-[#12221D] text-[#EAEFEA]">
-                      الشيخ {r.name}
+                    <option key={r.id} value={r.id} className="bg-stone-900 text-amber-200">
+                      {r.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Center Zone: Playback Controls */}
-              <div className="flex items-center gap-3">
-                {/* Prev Ayah */}
-                <button
-                  onClick={handlePrevAyah}
-                  disabled={activeAyahNumber <= 1}
-                  className="p-2 text-[#8FA89E] hover:text-amber-300 disabled:opacity-30 transition-colors"
-                  title="الآية السابقة"
-                >
-                  <SkipForward className="w-4 h-4" />
-                </button>
-
-                {/* Play / Pause Primary Button */}
-                <button
-                  onClick={togglePlayPause}
-                  className="w-11 h-11 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 flex items-center justify-center shadow-lg transition-all active:scale-95 font-bold"
-                  aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل التلاوة'}
-                >
-                  {isPlaying ? (
-                    <Pause className="w-5 h-5 fill-current" />
-                  ) : (
-                    <Play className="w-5 h-5 fill-current ml-0.5" />
-                  )}
-                </button>
-
-                {/* Next Ayah */}
-                <button
-                  onClick={handleNextAyah}
-                  disabled={activeAyahNumber >= currentSurah.ayahCount}
-                  className="p-2 text-[#8FA89E] hover:text-amber-300 disabled:opacity-30 transition-colors"
-                  title="الآية التالية"
-                >
-                  <SkipBack className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Left Zone: Mode & Speed */}
-              <div className="flex items-center gap-2">
-                {/* Audio mode toggle */}
-                <button
-                  onClick={() => {
-                    const nextMode = audioPlaybackMode === 'ayah' ? 'surah' : 'ayah';
-                    setAudioPlaybackMode(nextMode);
-                  }}
-                  className="px-2.5 py-1 text-xs rounded-md bg-[#162923] text-amber-200 border border-[#27473C] hover:bg-[#1E3930] transition-colors font-medium"
-                >
-                  {audioPlaybackMode === 'ayah' ? 'وضع آية بآية' : 'تلاوة السورة كاملة'}
-                </button>
-
-                {/* Playback speed */}
-                <button
-                  onClick={() => {
-                    const speeds = [1, 1.25, 1.5, 0.75];
-                    const nextIdx = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
-                    setPlaybackSpeed(speeds[nextIdx]);
-                  }}
-                  className="px-2 py-1 text-xs font-mono tabular-nums rounded-md bg-[#162923] text-amber-200 border border-[#27473C]"
-                  title="سرعة التلاوة"
-                >
-                  {playbackSpeed}x
-                </button>
-              </div>
+              {/* اختيار الآية */}
+              {audioPlaybackMode === 'ayah' ? (
+                <div className="flex items-center gap-1.5 bg-stone-950 text-amber-300 rounded-xl px-2.5 py-1.5 border border-stone-800 shadow-xs">
+                  <span className="text-[11px] font-bold text-amber-400 select-none shrink-0">الآية:</span>
+                  <select
+                    value={activeAyahNumber}
+                    onChange={(e) => playAyahDirectly(Number(e.target.value))}
+                    className="text-xs bg-transparent text-amber-200 font-bold focus:outline-none cursor-pointer font-mono"
+                    title="اختر الآية لتشغيلها"
+                  >
+                    {Array.from({ length: currentSurah.ayahCount }, (_, i) => i + 1).map((num) => (
+                      <option key={num} value={num} className="bg-stone-900 text-amber-200">
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <span className="text-xs font-bold bg-stone-950 text-amber-300 px-2.5 py-1.5 rounded-xl border border-stone-800 shadow-xs">
+                  سورة كاملة
+                </span>
+              )}
             </div>
+
+            {/* 2. قسم أزرار تشغيل الصوت (في المنتصف تماماً ومفصول عن النصوص) */}
+            <div className="flex items-center justify-center gap-3 shrink-0 py-0.5" dir="ltr">
+              {/* الآية السابقة */}
+              <button
+                onClick={handlePrevAyah}
+                disabled={activeAyahNumber <= 1}
+                className="w-8 h-8 rounded-full bg-stone-950/15 hover:bg-stone-950/25 active:scale-95 disabled:opacity-25 text-stone-950 flex items-center justify-center transition-all"
+                title="الآية السابقة"
+                aria-label="الآية السابقة"
+              >
+                <SkipBack className="w-4 h-4 fill-current" />
+              </button>
+
+              {/* تشغيل / إيقاف مؤقت */}
+              <button
+                onClick={togglePlayPause}
+                className="h-9 px-4 rounded-full bg-stone-950 hover:bg-stone-900 text-yellow-400 flex items-center gap-2 shadow-md hover:scale-105 active:scale-95 transition-all font-bold text-xs"
+                aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+                title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="w-4 h-4 fill-current" />
+                    <span>إيقاف</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                    <span>تشغيل</span>
+                  </>
+                )}
+              </button>
+
+              {/* الآية التالية */}
+              <button
+                onClick={handleNextAyah}
+                disabled={activeAyahNumber >= currentSurah.ayahCount}
+                className="w-8 h-8 rounded-full bg-stone-950/15 hover:bg-stone-950/25 active:scale-95 disabled:opacity-25 text-stone-950 flex items-center justify-center transition-all"
+                title="الآية التالية"
+                aria-label="الآية التالية"
+              >
+                <SkipForward className="w-4 h-4 fill-current" />
+              </button>
+            </div>
+
+            {/* 3. قسم الخيارات (نمط التلاوة والسرعة) */}
+            <div className="w-full sm:w-auto flex items-center justify-end gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  const nextMode = audioPlaybackMode === 'ayah' ? 'surah' : 'ayah';
+                  setAudioPlaybackMode(nextMode);
+                }}
+                className="flex-1 sm:flex-none text-center px-2.5 py-1.5 text-xs font-bold rounded-xl bg-stone-950 text-amber-300 hover:bg-stone-900 border border-stone-800 transition-colors shadow-xs"
+                title="تبديل وضع التلاوة (آية / سورة)"
+              >
+                {audioPlaybackMode === 'ayah' ? 'تلاوة آية' : 'سورة كاملة'}
+              </button>
+
+              <button
+                onClick={() => {
+                  const speeds = [1, 1.25, 1.5, 0.75];
+                  const nextIdx = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
+                  setPlaybackSpeed(speeds[nextIdx]);
+                }}
+                className="px-2.5 py-1.5 text-xs font-mono font-bold tabular-nums rounded-xl bg-stone-950 text-amber-300 hover:bg-stone-900 border border-stone-800 transition-colors shadow-xs"
+                title="سرعة التلاوة"
+              >
+                {playbackSpeed}x
+              </button>
+            </div>
+
           </div>
-        )}
+        </div>
       </div>
 
       {/* Floating Auto-Scroll Controls (شريط التحكم العائم المصغر بالتمرير التلقائي) */}
       {isAutoScrolling && (
         <div
-          className="fixed bottom-14 sm:bottom-16 left-1/2 -translate-x-1/2 z-50 bg-[#0C1A16]/95 backdrop-blur-md border border-amber-500/40 rounded-full px-2.5 py-1 shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 text-[11px] font-cairo text-[#EAEFEA] select-none max-w-[calc(100vw-2rem)] overflow-hidden"
+          className="fixed bottom-24 sm:bottom-16 left-1/2 -translate-x-1/2 z-50 bg-[#0C1A16]/95 backdrop-blur-md border border-amber-500/40 rounded-full px-2.5 py-1 shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 text-[11px] font-cairo text-[#EAEFEA] select-none max-w-[calc(100vw-2rem)] overflow-hidden"
           dir="rtl"
         >
           {/* Status Indicator */}

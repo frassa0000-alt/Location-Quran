@@ -48,7 +48,7 @@ export const QuranSplashIntro: React.FC<QuranSplashIntroProps> = ({ onFinish }) 
   return (
     <div
       onClick={handleDismiss}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#07130E] text-[#EAEFEA] transition-all duration-500 select-none cursor-pointer overflow-hidden ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#080B0E] text-slate-100 transition-all duration-500 select-none cursor-pointer overflow-hidden ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       dir="rtl"
@@ -64,7 +64,7 @@ export const QuranSplashIntro: React.FC<QuranSplashIntroProps> = ({ onFinish }) 
               cx="50"
               cy="50"
               r="44"
-              stroke="#132B22"
+              stroke="#1E293B"
               strokeWidth="2.5"
               fill="none"
             />
@@ -90,7 +90,7 @@ export const QuranSplashIntro: React.FC<QuranSplashIntroProps> = ({ onFinish }) 
         </div>
 
         {/* Clean simple loading bar */}
-        <div className="w-28 sm:w-32 h-1 bg-[#132A20] rounded-full overflow-hidden mt-6">
+        <div className="w-28 sm:w-32 h-1 bg-slate-800 rounded-full overflow-hidden mt-6">
           <div
             className="h-full bg-amber-400 rounded-full transition-all duration-150 ease-out"
             style={{ width: `${progress}%` }}
