@@ -425,16 +425,16 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
 
   return (
     <div className="space-y-6 pb-20 font-cairo" dir="rtl">
-      {/* Editorial Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0a1e17] via-[#102a21] to-[#081510] text-[#EAEFEA] p-5 sm:p-7 shadow-xl border border-[#214336]">
+      {/* Editorial Header Banner with iOS Liquid Glass */}
+      <div className="relative overflow-hidden rounded-3xl ios-liquid-glass text-[#EAEFEA] p-5 sm:p-7 shadow-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ios-glass-pill text-amber-300">
                 <BookOpen className="w-3.5 h-3.5 text-amber-400" />
                 المصحف الشريف كاملاً (٦٠٤ صفحة)
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#A6C4B7]">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-300">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 رسم مجمع الملك فهد
               </span>
@@ -442,7 +442,7 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
             <h1 className="text-2xl sm:text-3xl font-amiri font-bold text-amber-200 tracking-wide">
               القرآن الكريم
             </h1>
-            <p className="text-xs sm:text-sm text-[#A8C2B6] leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
               تصفح المصحف الشريف صفحة بصفحة برسم مجمع الملك فهد، مع خاصية التكبير والتصغير والتقليب اليدوي.
             </p>
           </div>
@@ -455,7 +455,7 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
                   setCurrentPage(bookmarkPage);
                   window.scrollTo({ top: 120, behavior: 'smooth' });
                 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-[#142D24] text-amber-300 border border-amber-500/40 hover:bg-[#1A3A2F] transition-all shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold ios-glass-pill text-amber-300 hover:text-white transition-all shadow-sm"
                 title="الذهاب إلى علامة القراءة المحفوظة"
               >
                 <BookMarked className="w-4 h-4 text-amber-400" />
@@ -465,10 +465,10 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
 
             <button
               onClick={handleSaveBookmark}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all shadow-md ${
                 bookmarkSuccess
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold'
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-extrabold border border-white/30'
               }`}
               title="حفظ الصفحة الحالية كعلامة قراءة"
             >
@@ -489,7 +489,7 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
       </div>
 
       {/* Primary Sticky Control Bar: Navigation, Zoom, Jump, Theme, Auto-scroll & Speed */}
-      <div className="sticky top-16 z-30 bg-[#101E1A]/95 backdrop-blur-md rounded-2xl border border-[#203D34] p-2.5 sm:p-3 shadow-lg flex flex-col gap-2.5 max-w-full overflow-hidden text-right">
+      <div className="sticky top-16 z-30 ios-liquid-glass-dock rounded-3xl p-3 shadow-2xl flex flex-col gap-2.5 max-w-full overflow-hidden text-right">
         {/* Tier 1: Page Navigation & Direct Jump Pickers (السابق، الصفحة، التالي، السورة، الجزء) */}
         <div className="flex flex-wrap items-center justify-between gap-2 w-full">
           {/* Navigation: Prev / Page / Next */}
@@ -497,26 +497,26 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
             <button
               onClick={handlePrevPage}
               disabled={currentPage <= 1}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C] text-xs font-medium"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl ios-glass-pill text-amber-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors text-xs font-medium"
               title="الصفحة السابقة (سهم يمين)"
             >
               <ChevronRight className="w-3.5 h-3.5" />
               <span>السابق</span>
             </button>
 
-            <div className="flex items-center gap-1 bg-[#0B1713] px-2.5 py-1.5 rounded-xl border border-[#1E3A30]">
+            <div className="flex items-center gap-1 bg-black/30 px-3 py-1.5 rounded-xl border border-white/10">
               <span className="text-[11px] font-bold text-[#EAEFEA]">صفحة</span>
               <span className="text-xs font-mono font-bold text-amber-300 tabular-nums">
                 {currentPage}
               </span>
-              <span className="text-xs text-[#7A998E]">/</span>
-              <span className="text-xs font-mono text-[#7A998E] tabular-nums">٦٠٤</span>
+              <span className="text-xs text-slate-400">/</span>
+              <span className="text-xs font-mono text-slate-400 tabular-nums">٦٠٤</span>
             </div>
 
             <button
               onClick={handleNextPage}
               disabled={currentPage >= 604}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-300 disabled:opacity-40 disabled:pointer-events-none transition-colors border border-[#22483C] text-xs font-medium"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl ios-glass-pill text-amber-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors text-xs font-medium"
               title="الصفحة التالية (سهم يسار)"
             >
               <span>التالي</span>
@@ -528,14 +528,14 @@ export const FullMushafReader: React.FC<FullMushafReaderProps> = ({ onNavigateSu
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowSurahPicker(true)}
-              className="px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-200 text-xs font-semibold border border-[#22483C] transition-colors"
+              className="px-3 py-1.5 rounded-xl ios-glass-pill text-amber-200 hover:text-white text-xs font-semibold transition-colors"
               title="الانتقال إلى سورة محددة"
             >
               السورة ▾
             </button>
             <button
               onClick={() => setShowJuzPicker(true)}
-              className="px-2.5 py-1.5 rounded-xl bg-[#142B23] hover:bg-[#1C3D32] text-amber-200 text-xs font-semibold border border-[#22483C] transition-colors"
+              className="px-3 py-1.5 rounded-xl ios-glass-pill text-amber-200 hover:text-white text-xs font-semibold transition-colors"
               title="الانتقال إلى جزء محدد"
             >
               الجزء ▾

@@ -17,6 +17,7 @@ export interface Ayah {
   audio?: string;
   juz?: number;
   page?: number;
+  translation?: string;
 }
 
 export const SURAHS_LIST: SurahMeta[] = [

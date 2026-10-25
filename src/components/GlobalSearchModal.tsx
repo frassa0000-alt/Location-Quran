@@ -53,16 +53,16 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-start justify-center pt-16 sm:pt-24 px-4 animate-in fade-in"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-4 animate-in fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-[#142520] w-full max-w-xl rounded-2xl shadow-2xl border border-[#274B3F] overflow-hidden text-right"
+        className="ios-liquid-glass w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden text-right"
         onClick={(e) => e.stopPropagation()}
         dir="rtl"
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#213C33] bg-[#101D19]">
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10 bg-white/5">
           <Search className="w-5 h-5 text-amber-400 shrink-0" />
           <input
             ref={inputRef}
@@ -70,12 +70,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             placeholder="ابحث باسم السورة، رقمها، أو معناها..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 text-sm bg-transparent border-none focus:outline-none text-[#EAEFEA] placeholder:text-[#7A988E] font-cairo"
+            className="flex-1 text-sm bg-transparent border-none focus:outline-none text-[#EAEFEA] placeholder:text-slate-400 font-cairo"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="text-[#7A988E] hover:text-[#EAEFEA] p-1"
+              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10"
             >
               <X className="w-4 h-4" />
             </button>
@@ -83,9 +83,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
         </div>
 
         {/* Results List */}
-        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-[#1B352D]">
+        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-white/10">
           {query.trim() === '' ? (
-            <div className="p-8 text-center text-xs text-[#8FA89E] space-y-2">
+            <div className="p-8 text-center text-xs text-slate-300 space-y-2">
               <p>جرّب البحث عن: «الفاتحة»، «الكهف»، «يس»، «الملك»، أو رقم السورة</p>
               <div className="flex items-center justify-center gap-2 pt-2 flex-wrap">
                 {[1, 18, 36, 67].map((num) => {
@@ -98,7 +98,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                         onSelectSurah(num);
                         onClose();
                       }}
-                      className="px-2.5 py-1 rounded-md bg-[#1B322B] text-amber-200 border border-[#28493E] hover:bg-[#23453B] transition-colors"
+                      className="px-3 py-1 rounded-xl ios-glass-pill text-amber-200 hover:text-white transition-all text-xs"
                     >
                       سورة {s.name}
                     </button>
@@ -107,7 +107,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
               </div>
             </div>
           ) : results.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[#8FA89E]">
+            <div className="p-8 text-center text-xs text-slate-400">
               لم نعثر على سورة مطابقة لـ «{query}»
             </div>
           ) : (
@@ -118,17 +118,17 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                   onSelectSurah(surah.number);
                   onClose();
                 }}
-                className="w-full p-3 rounded-xl flex items-center justify-between hover:bg-[#1A312B] transition-colors text-right group"
+                className="w-full p-3 rounded-2xl flex items-center justify-between hover:bg-white/10 transition-colors text-right group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-[#1B322B] text-amber-300 group-hover:bg-amber-500 group-hover:text-stone-950 flex items-center justify-center font-mono text-xs tabular-nums font-bold transition-colors border border-[#2A4C40]">
+                  <span className="w-8 h-8 rounded-xl bg-white/10 text-amber-300 group-hover:bg-amber-400 group-hover:text-stone-950 flex items-center justify-center font-mono text-xs tabular-nums font-bold transition-all border border-white/20">
                     {surah.number}
                   </span>
                   <div>
                     <span className="font-amiri font-bold text-base text-amber-200 group-hover:text-amber-300 block">
                       سُورَةُ {surah.name}
                     </span>
-                    <span className="text-[11px] text-[#8FA89E] font-cairo">
+                    <span className="text-[11px] text-slate-400 font-cairo">
                       {surah.englishName} · {surah.ayahCount} آية · الجزء {surah.juz}
                     </span>
                   </div>

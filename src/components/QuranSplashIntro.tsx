@@ -83,10 +83,15 @@ export const QuranSplashIntro: React.FC<QuranSplashIntroProps> = ({ onFinish }) 
             />
           </svg>
 
-          {/* Just the word "قرآن" in the center */}
-          <span className="font-amiri font-bold text-5xl sm:text-6xl text-amber-300 drop-shadow-md select-none">
-            قرآن
-          </span>
+          {/* كتابة القرآن الكريم في المنتصف بتصميم بديع متناسق */}
+          <div className="flex flex-col items-center justify-center text-center px-2 select-none">
+            <span className="font-amiri font-bold text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-300 to-amber-200 drop-shadow-md leading-relaxed">
+              القرآن الكريم
+            </span>
+            <span className="text-[10px] text-emerald-400/90 font-cairo tracking-widest mt-0.5">
+              كِتَابُ اللَّهِ المَجِيد
+            </span>
+          </div>
         </div>
 
         {/* Clean simple loading bar */}

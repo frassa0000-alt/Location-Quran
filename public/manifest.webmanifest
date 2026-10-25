@@ -1,0 +1,21 @@
+{
+  "name": "القرآن الكريم - تلاوة وتفسير وأذكار",
+  "short_name": "القرآن الكريم",
+  "description": "موقع إسلامي متكامل وخفيف لقراءة القرآن الكريم والاستماع للتلاوات العطرة، مع التفسير الميسر، أذكار المسلم، والسبحة الإلكترونية بدون إنترنت.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D1714",
+  "theme_color": "#0D1714",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["education", "lifestyle", "books"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

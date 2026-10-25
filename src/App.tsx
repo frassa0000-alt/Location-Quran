@@ -14,10 +14,12 @@ import { PrayerTimesSection } from './components/PrayerTimesSection';
 import { QiblaCompass } from './components/QiblaCompass';
 import { QuranRadioSection } from './components/QuranRadioSection';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
+import { AppSettings } from './components/SettingsModal';
 import { Footer } from './components/Footer';
 import { QuranSplashIntro } from './components/QuranSplashIntro';
+import { SpiritualWaveCanvas } from './components/SpiritualWaveCanvas';
 import { SURAHS_LIST } from './data/surahs';
-import { ChevronUp } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 
 interface Bookmark {
   surahNumber: number;
@@ -31,29 +33,140 @@ export default function App() {
   const [currentSurahNumber, setCurrentSurahNumber] = useState<number>(1);
   const [targetAyahNumber, setTargetAyahNumber] = useState<number>(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
 
-  // Theme & Typography settings
-  const [theme, setTheme] = useState<AppTheme>(() => {
+  // Network online / offline status listener
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Centralized Application & Reader Settings with LocalStorage persistence
+  const [settings, setSettings] = useState<AppSettings>(() => {
     try {
-      const saved = localStorage.getItem('quran_app_theme');
-      return (saved as AppTheme) || 'emerald';
+      const savedTheme = (localStorage.getItem('quran_app_theme') as AppTheme) || 'emerald';
+      const savedFontSize = Number(localStorage.getItem('quran_app_font_size')) || 32;
+      const savedFontFamily = (localStorage.getItem('quran_app_font_family') as 'amiri' | 'scheherazade' | 'cairo') || 'amiri';
+      const savedTextTone = (localStorage.getItem('quran_app_text_tone') as any) || 'ivory';
+      const savedGoldTone = (localStorage.getItem('quran_app_gold_tone') as any) || 'classic';
+      const savedBlackDepth = (localStorage.getItem('quran_app_black_depth') as any) || 'emerald';
+      const savedSoftGlow = localStorage.getItem('quran_soft_glow_enabled') !== 'false';
+      const savedGlowIntensity = (localStorage.getItem('quran_soft_glow_intensity') as 'subtle' | 'normal' | 'vivid') || 'normal';
+      const savedSpiritualWaves = localStorage.getItem('quran_spiritual_waves_enabled') !== 'false';
+      const savedSpiritualWavesIntensity = (localStorage.getItem('quran_spiritual_waves_intensity') as 'subtle' | 'normal' | 'vivid') || 'normal';
+      const savedReciter = localStorage.getItem('quran_default_reciter') || 'alafasy';
+      const savedSpeed = Number(localStorage.getItem('quran_playback_speed')) || 1;
+      const savedAutoAdvance = localStorage.getItem('quran_auto_advance_ayah') !== 'false';
+      const savedRepeat = Number(localStorage.getItem('quran_ayah_repeat_count')) || 1;
+      const savedShowTafsir = localStorage.getItem('quran_show_tafsir_under_ayah') !== 'false';
+      const savedHighlightActive = localStorage.getItem('quran_highlight_active_ayah') !== 'false';
+      const savedTranslation = localStorage.getItem('quran_reader_translation_edition') || 'none';
+
+      return {
+        fontSize: savedFontSize,
+        fontFamily: savedFontFamily,
+        theme: savedTheme,
+        textTone: savedTextTone,
+        goldTone: savedGoldTone,
+        blackDepth: savedBlackDepth,
+        softGlowEnabled: savedSoftGlow,
+        softGlowIntensity: savedGlowIntensity,
+        spiritualWavesEnabled: savedSpiritualWaves,
+        spiritualWavesIntensity: savedSpiritualWavesIntensity,
+        defaultReciterId: savedReciter,
+        playbackSpeed: savedSpeed,
+        autoAdvanceAyah: savedAutoAdvance,
+        ayahRepeatCount: savedRepeat,
+        showTafsirUnderAyah: savedShowTafsir,
+        highlightActiveAyah: savedHighlightActive,
+        translationEdition: savedTranslation,
+      };
     } catch {
-      return 'emerald';
+      return {
+        fontSize: 32,
+        fontFamily: 'amiri',
+        theme: 'emerald',
+        textTone: 'ivory',
+        goldTone: 'classic',
+        blackDepth: 'emerald',
+        softGlowEnabled: true,
+        softGlowIntensity: 'normal',
+        spiritualWavesEnabled: true,
+        spiritualWavesIntensity: 'normal',
+        defaultReciterId: 'alafasy',
+        playbackSpeed: 1,
+        autoAdvanceAyah: true,
+        ayahRepeatCount: 1,
+        showTafsirUnderAyah: true,
+        highlightActiveAyah: true,
+        translationEdition: 'none',
+      };
     }
   });
 
-  const [fontSize, setFontSize] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('quran_app_font_size');
-      return saved ? Number(saved) : 32;
-    } catch {
-      return 32;
-    }
-  });
+  const handleUpdateSettings = (updater: Partial<AppSettings> | ((prev: AppSettings) => AppSettings)) => {
+    setSettings((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      try {
+        localStorage.setItem('quran_app_theme', next.theme);
+        localStorage.setItem('quran_app_font_size', String(next.fontSize));
+        localStorage.setItem('quran_app_font_family', next.fontFamily);
+        localStorage.setItem('quran_app_text_tone', next.textTone);
+        localStorage.setItem('quran_app_gold_tone', next.goldTone);
+        localStorage.setItem('quran_app_black_depth', next.blackDepth);
+        localStorage.setItem('quran_soft_glow_enabled', String(next.softGlowEnabled));
+        localStorage.setItem('quran_soft_glow_intensity', next.softGlowIntensity);
+        if (next.spiritualWavesEnabled !== undefined) {
+          localStorage.setItem('quran_spiritual_waves_enabled', String(next.spiritualWavesEnabled));
+        }
+        if (next.spiritualWavesIntensity !== undefined) {
+          localStorage.setItem('quran_spiritual_waves_intensity', next.spiritualWavesIntensity);
+        }
+        localStorage.setItem('quran_default_reciter', next.defaultReciterId);
+        localStorage.setItem('quran_playback_speed', String(next.playbackSpeed));
+        localStorage.setItem('quran_auto_advance_ayah', String(next.autoAdvanceAyah));
+        localStorage.setItem('quran_ayah_repeat_count', String(next.ayahRepeatCount));
+        localStorage.setItem('quran_show_tafsir_under_ayah', String(next.showTafsirUnderAyah));
+        localStorage.setItem('quran_highlight_active_ayah', String(next.highlightActiveAyah));
+        if (next.translationEdition !== undefined) {
+          localStorage.setItem('quran_reader_translation_edition', next.translationEdition);
+        }
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
-  const [fontFamily, setFontFamily] = useState<'amiri' | 'scheherazade' | 'cairo'>('amiri');
+  const handleResetSettings = () => {
+    const defaults: AppSettings = {
+      fontSize: 32,
+      fontFamily: 'amiri',
+      theme: 'emerald',
+      textTone: 'ivory',
+      goldTone: 'classic',
+      blackDepth: 'emerald',
+      softGlowEnabled: true,
+      softGlowIntensity: 'normal',
+      spiritualWavesEnabled: true,
+      spiritualWavesIntensity: 'normal',
+      defaultReciterId: 'alafasy',
+      playbackSpeed: 1,
+      autoAdvanceAyah: true,
+      ayahRepeatCount: 1,
+      showTafsirUnderAyah: true,
+      highlightActiveAyah: true,
+      translationEdition: 'none',
+    };
+    handleUpdateSettings(defaults);
+  };
 
   // Bookmark / Last Read position
   const [bookmark, setBookmark] = useState<Bookmark | null>(() => {
@@ -64,36 +177,6 @@ export default function App() {
       return null;
     }
   });
-
-  // Persist theme & font size
-  useEffect(() => {
-    try {
-      localStorage.setItem('quran_app_theme', theme);
-    } catch {
-      // ignore
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('quran_app_font_size', String(fontSize));
-    } catch {
-      // ignore
-    }
-  }, [fontSize]);
-
-  // Track scroll position for back to top button
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 350) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleSelectSurah = (surahNumber: number, startAyah: number = 1) => {
     setCurrentSurahNumber(surahNumber);
@@ -126,39 +209,89 @@ export default function App() {
 
   const currentSurahMeta = SURAHS_LIST.find((s) => s.number === currentSurahNumber);
 
-  // Determine root theme styles - Modern, clean, lightweight midnight palette
+  // Precise text white tone and golden accent mapping
+  const textToneHex = {
+    ivory: '#F5EFE6',
+    white: '#F8FAFC',
+    sand: '#FEF3C7',
+    silver: '#E2E8F0',
+  }[settings.textTone] || '#F5EFE6';
+
+  const goldToneHex = {
+    classic: '#F59E0B',
+    radiant: '#FBBF24',
+    bronze: '#D97706',
+  }[settings.goldTone] || '#F59E0B';
+
+  // Determine root theme styles based on blackDepth and theme settings
   const getThemeClasses = () => {
-    if (theme === 'dark') {
-      return 'dark bg-[#080B0E] text-[#F1F5F9]';
+    if (settings.blackDepth === 'pure-black') {
+      return 'dark bg-[#000000] text-[#F1F5F9]';
     }
-    if (theme === 'emerald') {
-      return 'dark bg-[#0A0E13] text-[#F1F5F9]';
+    if (settings.blackDepth === 'parchment') {
+      return 'dark bg-[#0F141C] text-[#F1F5F9]';
     }
-    // warm night mus'haf
-    return 'dark bg-[#0C1016] text-[#F1F5F9]';
+    return 'dark bg-[#0A0E13] text-[#F1F5F9]';
   };
 
   return (
     <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-200 relative ${getThemeClasses()}`} dir="rtl">
       {/* Ambient Soft Glow with High-Performance Color Shift */}
+      {settings.softGlowEnabled && (
+        <div
+          className={`fixed inset-0 pointer-events-none overflow-hidden z-0 transition-opacity duration-500 ${
+            settings.softGlowIntensity === 'subtle'
+              ? 'opacity-40'
+              : settings.softGlowIntensity === 'vivid'
+              ? 'opacity-90'
+              : 'opacity-70'
+          }`}
+          aria-hidden="true"
+        >
+          <div className="ambient-soft-glow absolute -top-[15%] left-1/2 -translate-x-1/2 w-[950px] h-[600px] rounded-full blur-[110px]" />
+          <div className="ambient-soft-glow-bottom absolute -bottom-[15%] right-1/4 w-[800px] h-[550px] rounded-full blur-[120px]" />
+        </div>
+      )}
+
+      {/* Floating Liquid Water Refraction Orbs - انكسارات مائية عائمة خلف الزجاج كالأيفون */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
-        <div className="ambient-soft-glow absolute -top-[15%] left-1/2 -translate-x-1/2 w-[950px] h-[600px] rounded-full blur-[110px]" />
-        <div className="ambient-soft-glow-bottom absolute -bottom-[15%] right-1/4 w-[800px] h-[550px] rounded-full blur-[120px]" />
+        <div className="liquid-water-orb-1 absolute -top-[10%] right-[10%] w-[680px] h-[560px] rounded-full bg-gradient-to-br from-emerald-500/18 via-teal-500/10 to-transparent blur-[130px] opacity-75" />
+        <div className="liquid-water-orb-2 absolute top-[35%] -left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-amber-500/14 via-emerald-600/8 to-transparent blur-[140px] opacity-70" />
+        <div className="liquid-water-orb-3 absolute -bottom-[15%] left-[25%] w-[750px] h-[600px] rounded-full bg-gradient-to-t from-teal-500/15 via-emerald-700/10 to-transparent blur-[130px] opacity-65" />
       </div>
+
+      {/* Interactive Spiritual Luminous Waves Canvas (موجات ضوئية خافتة وتفاعلية بالكانفاس) */}
+      <SpiritualWaveCanvas
+        enabled={settings.spiritualWavesEnabled !== false}
+        intensity={settings.spiritualWavesIntensity || 'normal'}
+        theme={settings.theme}
+      />
 
       {/* Navigation Top Bar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        theme={theme}
-        setTheme={setTheme}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        fontFamily={fontFamily}
-        setFontFamily={setFontFamily}
+        theme={settings.theme}
+        setTheme={(t) => handleUpdateSettings({ theme: t })}
+        fontSize={settings.fontSize}
+        setFontSize={(sz) =>
+          handleUpdateSettings({
+            fontSize: typeof sz === 'function' ? sz(settings.fontSize) : sz,
+          })
+        }
+        fontFamily={settings.fontFamily}
+        setFontFamily={(f) => handleUpdateSettings({ fontFamily: f })}
         onOpenSearch={() => setIsSearchOpen(true)}
         currentSurahName={currentSurahMeta?.name}
       />
+
+      {/* Offline Mode Indicator Banner */}
+      {isOffline && (
+        <div className="bg-[#11271F] border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-200 font-medium flex items-center justify-center gap-2 shadow-sm animate-in fade-in select-none">
+          <WifiOff className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>أنت الآن في وضع عدم الاتصال (أوفلاين) · يمكنك قراءة السور المحفوظة مسبقاً، استخدام السبحة الإلكترونية، وتلاوة الأذكار بدون إنترنت.</span>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
@@ -187,11 +320,24 @@ export default function App() {
               setTargetAyahNumber(1);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            fontSize={fontSize}
-            setFontSize={setFontSize}
-            fontFamily={fontFamily}
+            fontSize={settings.fontSize}
+            setFontSize={(sz) =>
+              handleUpdateSettings({
+                fontSize: typeof sz === 'function' ? sz(settings.fontSize) : sz,
+              })
+            }
+            fontFamily={settings.fontFamily}
             onSaveBookmark={handleSaveBookmark}
             currentBookmark={bookmark}
+            defaultReciterId={settings.defaultReciterId}
+            playbackSpeedDefault={settings.playbackSpeed}
+            autoAdvanceAyah={settings.autoAdvanceAyah}
+            ayahRepeatCount={settings.ayahRepeatCount}
+            textToneColor={textToneHex}
+            goldToneColor={goldToneHex}
+            showTafsirUnderAyah={settings.showTafsirUnderAyah}
+            initialTranslationEdition={settings.translationEdition}
+            onUpdateTranslationEdition={(ed) => handleUpdateSettings({ translationEdition: ed })}
           />
         )}
 
@@ -221,18 +367,6 @@ export default function App() {
         }}
         onNavigateSurah={(num) => handleSelectSurah(num, 1)}
       />
-
-      {/* Floating Back-to-Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 left-6 z-40 p-3 rounded-2xl bg-[#132821]/90 hover:bg-[#1B382E] text-amber-300 border border-amber-500/30 shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95 group"
-          title="العودة لأعلى الصفحة"
-          aria-label="العودة لأعلى الصفحة"
-        >
-          <ChevronUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
-        </button>
-      )}
 
       {/* Website Entrance Splash Screen */}
       {showSplash && (
