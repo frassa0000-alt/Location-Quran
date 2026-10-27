@@ -287,133 +287,95 @@
   backdrop-filter: blur(28px) saturate(190%) contrast(105%);
   -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-top-color: rgba(255, 255, 255, 0.28);
-  border-bottom-color: rgba(255, 255, 255, 0.05);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
   box-shadow: 
     0 16px 40px -10px rgba(0, 0, 0, 0.55),
-    0 4px 16px -2px rgba(0, 0, 0, 0.35),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3);
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform: translateZ(0);
 }
 
 .ios-liquid-glass-dock {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.03) 45%,
-    rgba(6, 15, 12, 0.75) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 45%,
+    rgba(6, 15, 12, 0.88) 100%
   );
-  background-color: rgba(8, 18, 14, 0.75);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-top-color: rgba(255, 255, 255, 0.38);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(8, 18, 14, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.3);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
   box-shadow: 
-    0 20px 50px -12px rgba(0, 0, 0, 0.65),
-    0 8px 24px -4px rgba(0, 0, 0, 0.4),
-    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.35),
-    inset 0 0 20px 0 rgba(255, 255, 255, 0.02);
+    0 12px 36px -6px rgba(0, 0, 0, 0.55),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateZ(0);
 }
 
+/* High-Performance Card: Zero backdrop-filter overhead for instant, buttery 60fps scrolling */
 .ios-liquid-glass-card {
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.09) 0%,
-    rgba(255, 255, 255, 0.02) 40%,
-    rgba(10, 20, 16, 0.52) 100%
+    rgba(20, 32, 27, 0.92) 0%,
+    rgba(11, 20, 16, 0.96) 100%
   );
-  background-color: rgba(12, 23, 19, 0.55);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top-color: rgba(255, 255, 255, 0.24);
-  border-bottom-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.03);
   box-shadow: 
-    0 12px 32px -8px rgba(0, 0, 0, 0.45),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    0 6px 20px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  content-visibility: auto;
+  contain-intrinsic-size: 110px;
+  transform: translateZ(0);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .ios-liquid-glass-card:hover {
-  background-color: rgba(15, 30, 24, 0.68);
+  background: linear-gradient(
+    145deg,
+    rgba(26, 42, 35, 0.96) 0%,
+    rgba(14, 25, 20, 0.98) 100%
+  );
   border-color: rgba(245, 158, 11, 0.35);
-  border-top-color: rgba(255, 255, 255, 0.45);
+  border-top-color: rgba(255, 255, 255, 0.35);
   box-shadow: 
-    0 22px 50px -10px rgba(0, 0, 0, 0.65),
-    0 0 24px -2px rgba(245, 158, 11, 0.18),
-    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.38);
+    0 12px 30px -6px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(245, 158, 11, 0.12),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
 }
 
 .ios-glass-pill {
-  background: rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-top-color: rgba(255, 255, 255, 0.25);
-  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.15);
+  transform: translateZ(0);
 }
 
 .ios-glass-pill-active {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  border-top-color: rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.16) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-top-color: rgba(255, 255, 255, 0.35);
   box-shadow: 
-    0 4px 16px rgba(245, 158, 11, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    0 2px 10px rgba(245, 158, 11, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transform: translateZ(0);
 }
 
-/* Fluid floating water animation for luminous orbs */
-@keyframes fluidWaterFloat1 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-  }
-  33% {
-    transform: translate3d(45px, -35px, 0) scale(1.12) rotate(8deg);
-  }
-  66% {
-    transform: translate3d(-35px, 30px, 0) scale(0.92) rotate(-8deg);
-  }
+/* Static, zero-CPU ambient glow */
+.ambient-glow-static {
+  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+              radial-gradient(circle at 85% 60%, rgba(245, 158, 11, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 15% 90%, rgba(20, 184, 166, 0.06) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-@keyframes fluidWaterFloat2 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-  }
-  40% {
-    transform: translate3d(-50px, -30px, 0) scale(1.08) rotate(-10deg);
-  }
-  75% {
-    transform: translate3d(40px, 35px, 0) scale(0.95) rotate(8deg);
-  }
-}
-
-@keyframes fluidWaterFloat3 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(25px, 50px, 0) scale(1.15);
-  }
-}
-
-.liquid-water-orb-1 {
-  animation: fluidWaterFloat1 24s ease-in-out infinite;
-  will-change: transform;
-}
-
-.liquid-water-orb-2 {
-  animation: fluidWaterFloat2 28s ease-in-out infinite;
-  will-change: transform;
-}
-
-.liquid-water-orb-3 {
-  animation: fluidWaterFloat3 32s ease-in-out infinite;
-  will-change: transform;
-}
 
 
 

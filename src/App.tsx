@@ -237,28 +237,8 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-200 relative ${getThemeClasses()}`} dir="rtl">
       {/* Ambient Soft Glow with High-Performance Color Shift */}
-      {settings.softGlowEnabled && (
-        <div
-          className={`fixed inset-0 pointer-events-none overflow-hidden z-0 transition-opacity duration-500 ${
-            settings.softGlowIntensity === 'subtle'
-              ? 'opacity-40'
-              : settings.softGlowIntensity === 'vivid'
-              ? 'opacity-90'
-              : 'opacity-70'
-          }`}
-          aria-hidden="true"
-        >
-          <div className="ambient-soft-glow absolute -top-[15%] left-1/2 -translate-x-1/2 w-[950px] h-[600px] rounded-full blur-[110px]" />
-          <div className="ambient-soft-glow-bottom absolute -bottom-[15%] right-1/4 w-[800px] h-[550px] rounded-full blur-[120px]" />
-        </div>
-      )}
-
-      {/* Floating Liquid Water Refraction Orbs - انكسارات مائية عائمة خلف الزجاج كالأيفون */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
-        <div className="liquid-water-orb-1 absolute -top-[10%] right-[10%] w-[680px] h-[560px] rounded-full bg-gradient-to-br from-emerald-500/18 via-teal-500/10 to-transparent blur-[130px] opacity-75" />
-        <div className="liquid-water-orb-2 absolute top-[35%] -left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-amber-500/14 via-emerald-600/8 to-transparent blur-[140px] opacity-70" />
-        <div className="liquid-water-orb-3 absolute -bottom-[15%] left-[25%] w-[750px] h-[600px] rounded-full bg-gradient-to-t from-teal-500/15 via-emerald-700/10 to-transparent blur-[130px] opacity-65" />
-      </div>
+      {/* Static Lightweight Ambient Atmosphere (Zero-CPU, Silky Smooth) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 ambient-glow-static" aria-hidden="true" />
 
       {/* Interactive Spiritual Luminous Waves Canvas (موجات ضوئية خافتة وتفاعلية بالكانفاس) */}
       <SpiritualWaveCanvas
