@@ -79,14 +79,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Zone 3: Primary Actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Quick Search */}
             <button
               onClick={onOpenSearch}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold ios-glass-pill hover:bg-white/15 text-amber-200 hover:text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-xs"
-              title="بحث في السور والآيات"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold ios-glass-pill hover:bg-white/15 text-amber-200 hover:text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-xs border border-amber-400/30"
+              title="بحث في القرآن الكريم"
             >
               <Search className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">بحث سريع</span>
+              <span>القرآن الكريم</span>
             </button>
           </div>
         </div>

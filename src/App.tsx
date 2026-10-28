@@ -18,6 +18,7 @@ import { AppSettings } from './components/SettingsModal';
 import { Footer } from './components/Footer';
 import { QuranSplashIntro } from './components/QuranSplashIntro';
 import { SpiritualWaveCanvas } from './components/SpiritualWaveCanvas';
+import { ElAiAssistant } from './components/ElAiAssistant';
 import { SURAHS_LIST } from './data/surahs';
 import { WifiOff } from 'lucide-react';
 
@@ -67,7 +68,6 @@ export default function App() {
       const savedRepeat = Number(localStorage.getItem('quran_ayah_repeat_count')) || 1;
       const savedShowTafsir = localStorage.getItem('quran_show_tafsir_under_ayah') !== 'false';
       const savedHighlightActive = localStorage.getItem('quran_highlight_active_ayah') !== 'false';
-      const savedTranslation = localStorage.getItem('quran_reader_translation_edition') || 'none';
 
       return {
         fontSize: savedFontSize,
@@ -86,7 +86,6 @@ export default function App() {
         ayahRepeatCount: savedRepeat,
         showTafsirUnderAyah: savedShowTafsir,
         highlightActiveAyah: savedHighlightActive,
-        translationEdition: savedTranslation,
       };
     } catch {
       return {
@@ -106,7 +105,6 @@ export default function App() {
         ayahRepeatCount: 1,
         showTafsirUnderAyah: true,
         highlightActiveAyah: true,
-        translationEdition: 'none',
       };
     }
   });
@@ -135,9 +133,6 @@ export default function App() {
         localStorage.setItem('quran_ayah_repeat_count', String(next.ayahRepeatCount));
         localStorage.setItem('quran_show_tafsir_under_ayah', String(next.showTafsirUnderAyah));
         localStorage.setItem('quran_highlight_active_ayah', String(next.highlightActiveAyah));
-        if (next.translationEdition !== undefined) {
-          localStorage.setItem('quran_reader_translation_edition', next.translationEdition);
-        }
       } catch {
         // ignore
       }
@@ -163,7 +158,6 @@ export default function App() {
       ayahRepeatCount: 1,
       showTafsirUnderAyah: true,
       highlightActiveAyah: true,
-      translationEdition: 'none',
     };
     handleUpdateSettings(defaults);
   };
@@ -316,8 +310,6 @@ export default function App() {
             textToneColor={textToneHex}
             goldToneColor={goldToneHex}
             showTafsirUnderAyah={settings.showTafsirUnderAyah}
-            initialTranslationEdition={settings.translationEdition}
-            onUpdateTranslationEdition={(ed) => handleUpdateSettings({ translationEdition: ed })}
           />
         )}
 
@@ -332,11 +324,14 @@ export default function App() {
         {activeTab === 'radio' && <QuranRadioSection />}
       </main>
 
-      {/* Global Search Dialog */}
+      {/* Floating Suspended Chat ("شات متعلق في الهوا") */}
+      <ElAiAssistant onNavigateSurah={handleSelectSurah} />
+
+      {/* Global Advanced Search Dialog */}
       <GlobalSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onSelectSurah={(num) => handleSelectSurah(num, 1)}
+        onSelectSurah={(num, ayah) => handleSelectSurah(num, ayah || 1)}
       />
 
       {/* Footer */}

@@ -15,12 +15,9 @@ import {
   BookOpen,
   ChevronUp,
   ChevronDown,
-  Languages,
-  Globe,
 } from 'lucide-react';
 import { AppTheme } from './Navbar';
 import { RECITERS } from '../data/reciters';
-import { QURAN_TRANSLATIONS } from '../data/translations';
 
 export type TextTone = 'ivory' | 'white' | 'sand' | 'silver';
 export type GoldTone = 'classic' | 'radiant' | 'bronze';
@@ -43,7 +40,6 @@ export interface AppSettings {
   ayahRepeatCount: number;
   showTafsirUnderAyah: boolean;
   highlightActiveAyah: boolean;
-  translationEdition?: string;
 }
 
 interface SettingsModalProps {
@@ -862,46 +858,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </button>
               </div>
 
-              {/* Translation of Quran Meanings (Multiple Languages) */}
-              <div className="bg-[#091310] border border-amber-500/20 rounded-xl p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-amber-400" />
-                  <div>
-                    <div className="text-xs font-semibold text-slate-200">ترجمة معاني القرآن الكريم (بلغات متعددة)</div>
-                    <p className="text-[10px] text-slate-400">إظهار ترجمة معتمدة للآيات (كالإنكليزية والفرنسية وغيرها) بجانب كل آية</p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-0.5">
-                  {QURAN_TRANSLATIONS.map((t) => {
-                    const isSelected = (settings.translationEdition || 'none') === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => onUpdateSettings({ translationEdition: t.id })}
-                        className={`p-2 rounded-xl border text-right transition-all flex items-center justify-between text-xs ${
-                          isSelected
-                            ? 'bg-amber-500/20 border-amber-400 text-amber-200 font-bold shadow-xs'
-                            : 'bg-[#10221B] border-[#1C362F] text-slate-300 hover:border-amber-500/40 hover:text-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{t.flag}</span>
-                          <div>
-                            <div className="font-semibold text-xs text-amber-100 flex items-center gap-1">
-                              <span>{t.languageNameAr}</span>
-                              <span className="text-[10px] text-slate-400 font-normal">({t.languageNameNative})</span>
-                            </div>
-                            <div className="text-[10px] text-emerald-400/80 line-clamp-1">{t.translatorName}</div>
-                          </div>
-                        </div>
-                        {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           )}
         </div>

@@ -376,6 +376,88 @@
   pointer-events: none;
 }
 
+/* High-end Animations for Floating Assistant */
+@keyframes floatLevitate {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.02);
+  }
+}
+
+.animate-float-levitate {
+  animation: floatLevitate 3.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes auroraHalo {
+  0%, 100% {
+    box-shadow: 
+      0 0 16px -2px rgba(245, 158, 11, 0.35),
+      0 0 30px -4px rgba(16, 185, 129, 0.25),
+      0 8px 24px -4px rgba(0, 0, 0, 0.7);
+  }
+  50% {
+    box-shadow: 
+      0 0 24px 2px rgba(16, 185, 129, 0.45),
+      0 0 38px 4px rgba(245, 158, 11, 0.3),
+      0 12px 28px -4px rgba(0, 0, 0, 0.75);
+  }
+}
+
+.animate-aurora-halo {
+  animation: auroraHalo 4s ease-in-out infinite;
+}
+
+@keyframes springPopup {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.015) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-spring-popup {
+  animation: springPopup 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmerSweep 3.5s ease-in-out infinite;
+}
+
+@keyframes messageFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-message-fade {
+  animation: messageFade 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
+
 
 
 

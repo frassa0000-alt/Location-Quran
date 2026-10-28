@@ -1,5 +1,4 @@
 import { Ayah, BUNDLED_SURAHS } from '../data/surahs';
-import { BUNDLED_TRANSLATIONS } from '../data/translations';
 
 // Utility regex to strip prefixed Basmala from verse 1 for surahs 2..114 (except 9 At-Tawbah which has none)
 // Matches all Uthmani variations in Al-Quran Cloud (such as with shaddah on ba, etc.)
@@ -100,67 +99,7 @@ export async function fetchSurahVerses(surahNumber: number): Promise<Ayah[]> {
   }
 }
 
-// In-memory cache for surah translations (key: `${surahNumber}_${editionId}`)
-const translationCache: Record<string, Record<number, string>> = {};
 
-export async function fetchSurahTranslation(
-  surahNumber: number,
-  editionId: string
-): Promise<Record<number, string>> {
-  if (!editionId || editionId === 'none') {
-    return {};
-  }
-
-  const cacheKey = `${surahNumber}_${editionId}`;
-  if (translationCache[cacheKey]) {
-    return translationCache[cacheKey];
-  }
-
-  // Check localStorage cache
-  try {
-    const saved = localStorage.getItem(`quran_trans_v1_${cacheKey}`);
-    if (saved) {
-      const parsed = JSON.parse(saved) as Record<number, string>;
-      if (parsed && typeof parsed === 'object') {
-        translationCache[cacheKey] = parsed;
-        return parsed;
-      }
-    }
-  } catch {
-    // Continue to network
-  }
-
-  try {
-    const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/${editionId}`);
-    if (!res.ok) {
-      throw new Error(`HTTP error ${res.status}`);
-    }
-
-    const data = await res.json();
-    if (data.code === 200 && data.data && Array.isArray(data.data.ayahs)) {
-      const mapping: Record<number, string> = {};
-      data.data.ayahs.forEach((item: { numberInSurah: number; text: string }) => {
-        mapping[item.numberInSurah] = item.text;
-      });
-
-      translationCache[cacheKey] = mapping;
-      try {
-        localStorage.setItem(`quran_trans_v1_${cacheKey}`, JSON.stringify(mapping));
-      } catch {
-        // storage quota safe
-      }
-      return mapping;
-    }
-    throw new Error('Invalid translation structure');
-  } catch (err) {
-    console.warn(`Could not load translation ${editionId} for surah ${surahNumber}:`, err);
-    // Return bundled translation if present
-    if (BUNDLED_TRANSLATIONS[editionId]?.[surahNumber]) {
-      return BUNDLED_TRANSLATIONS[editionId][surahNumber];
-    }
-    return {};
-  }
-}
 
 export interface PageAyah {
   number: number; // in Quran

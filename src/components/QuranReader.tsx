@@ -22,13 +22,10 @@ import {
   Search,
   Repeat,
   Layers,
-  Languages,
-  Globe,
 } from 'lucide-react';
 import { SURAHS_LIST, SurahMeta, Ayah, BASMALA } from '../data/surahs';
 import { RECITERS, Reciter, getSurahAudioUrl, getAyahAudioUrl } from '../data/reciters';
-import { QURAN_TRANSLATIONS, QuranTranslationEdition, getTranslationEdition } from '../data/translations';
-import { fetchSurahVerses, fetchSurahTranslation } from '../services/quranApi';
+import { fetchSurahVerses } from '../services/quranApi';
 
 interface QuranReaderProps {
   surahNumber: number;
@@ -46,8 +43,6 @@ interface QuranReaderProps {
   textToneColor?: string;
   goldToneColor?: string;
   showTafsirUnderAyah?: boolean;
-  initialTranslationEdition?: string;
-  onUpdateTranslationEdition?: (editionId: string) => void;
 }
 
 export const QuranReader: React.FC<QuranReaderProps> = ({
@@ -66,8 +61,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
   textToneColor = '#F5EFE6',
   goldToneColor = '#F59E0B',
   showTafsirUnderAyah = true,
-  initialTranslationEdition,
-  onUpdateTranslationEdition,
 }) => {
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,89 +72,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
   // Selected Verse for Tafsir modal
   const [selectedAyahForTafsir, setSelectedAyahForTafsir] = useState<Ayah | null>(null);
 
-  // Translation of Quran Meanings state
-  const [translationEdition, setTranslationEdition] = useState<string>(() => {
-    if (initialTranslationEdition) return initialTranslationEdition;
-    try {
-      return localStorage.getItem('quran_reader_translation_edition') || 'none';
-    } catch {
-      return 'none';
-    }
-  });
 
-  // Sync if prop changes externally
-  useEffect(() => {
-    if (initialTranslationEdition !== undefined && initialTranslationEdition !== translationEdition) {
-      setTranslationEdition(initialTranslationEdition);
-    }
-  }, [initialTranslationEdition]);
-
-  const [translationTexts, setTranslationTexts] = useState<Record<number, string>>({});
-  const [isTranslationLoading, setIsTranslationLoading] = useState<boolean>(false);
-  const [isTranslationMenuOpen, setIsTranslationMenuOpen] = useState<boolean>(false);
-  const translationMenuRef = useRef<HTMLDivElement | null>(null);
-
-  // Close translation menu on outside click
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (
-        isTranslationMenuOpen &&
-        translationMenuRef.current &&
-        !translationMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsTranslationMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isTranslationMenuOpen]);
-
-  // Fetch translation texts when surah or edition changes
-  useEffect(() => {
-    if (!translationEdition || translationEdition === 'none') {
-      setTranslationTexts({});
-      setIsTranslationLoading(false);
-      return;
-    }
-
-    let active = true;
-    setIsTranslationLoading(true);
-
-    fetchSurahTranslation(surahNumber, translationEdition)
-      .then((res) => {
-        if (active) {
-          setTranslationTexts(res);
-          setIsTranslationLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.warn('Error fetching translation:', err);
-        if (active) {
-          setIsTranslationLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [surahNumber, translationEdition]);
-
-  const handleSelectTranslation = (editionId: string) => {
-    setTranslationEdition(editionId);
-    setIsTranslationMenuOpen(false);
-    try {
-      localStorage.setItem('quran_reader_translation_edition', editionId);
-    } catch {
-      // quota safe
-    }
-    if (onUpdateTranslationEdition) {
-      onUpdateTranslationEdition(editionId);
-    }
-  };
-
-  const currentTranslationEdition = useMemo(() => {
-    return getTranslationEdition(translationEdition);
-  }, [translationEdition]);
 
   // Audio State
   const [selectedReciter, setSelectedReciter] = useState<Reciter>(() => {
@@ -624,83 +535,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
             </div>
           </div>
 
-          {/* Translation of Meanings Language Selector - ترجمة معاني القرآن الكريم بتصميم زجاجي عائم */}
-          <div className="relative inline-flex" ref={translationMenuRef}>
-            <button
-              type="button"
-              onClick={() => setIsTranslationMenuOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl text-xs font-semibold transition-all shadow-xs ${
-                translationEdition !== 'none'
-                  ? 'ios-glass-pill-active border-amber-400/60 ring-1 ring-amber-400/30'
-                  : 'ios-liquid-glass text-slate-300 hover:text-amber-200'
-              }`}
-              title="اختيار ترجمة معاني القرآن الكريم بلغات متعددة (إنجليزية، فرنسية، أردية...)"
-            >
-              <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>
-                {translationEdition !== 'none'
-                  ? `${currentTranslationEdition.flag} ${currentTranslationEdition.languageNameAr}`
-                  : 'ترجمة المعاني'}
-              </span>
-              <ChevronDown className={`w-3 h-3 opacity-70 transition-transform ${isTranslationMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Translation Selection Popover */}
-            {isTranslationMenuOpen && (
-              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-72 sm:w-80 ios-liquid-glass rounded-3xl p-3 shadow-2xl ring-1 ring-white/20 z-50 text-right animate-in fade-in zoom-in-95 duration-150">
-                {/* Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2 px-1">
-                  <div className="flex items-center gap-1.5">
-                    <Languages className="w-4 h-4 text-amber-400" />
-                    <span className="font-bold text-xs text-amber-200">ترجمة معاني القرآن الكريم</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsTranslationMenuOpen(false)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 text-xs"
-                    title="إغلاق"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* List of languages */}
-                <div className="space-y-1 max-h-64 overflow-y-auto pr-0.5 scrollbar-thin">
-                  {QURAN_TRANSLATIONS.map((edition) => {
-                    const isSelected = translationEdition === edition.id;
-                    return (
-                      <button
-                        key={edition.id}
-                        type="button"
-                        onClick={() => handleSelectTranslation(edition.id)}
-                        className={`w-full flex items-center justify-between p-2 rounded-xl text-right transition-all text-xs ${
-                          isSelected
-                            ? 'ios-glass-pill-active'
-                            : 'hover:bg-white/10 text-slate-300 border border-transparent'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{edition.flag}</span>
-                          <div>
-                            <div className="font-semibold text-xs text-amber-100 flex items-center gap-1">
-                              <span>{edition.languageNameAr}</span>
-                              <span className="text-[10px] text-slate-400 font-normal">({edition.languageNameNative})</span>
-                            </div>
-                            <div className="text-[10px] text-emerald-400/80 line-clamp-1">{edition.translatorName}</div>
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <span className="text-amber-400 text-xs shrink-0 flex items-center gap-0.5 font-bold">
-                            <Check className="w-3.5 h-3.5" />
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -856,36 +690,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
                   </span>
                 </p>
 
-                {/* Meaning Translation Card - ترجمة معاني القرآن الكريم بلغات متعددة */}
-                {translationEdition !== 'none' && (
-                  <div
-                    className={`mt-3 p-3 rounded-2xl bg-[#0B1A14]/90 border border-emerald-500/30 text-slate-200 transition-all ${
-                      currentTranslationEdition.direction === 'ltr' ? 'text-left' : 'text-right'
-                    }`}
-                    dir={currentTranslationEdition.direction}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1.5 mb-2 border-b border-[#163328] text-[11px]">
-                      <div className="flex items-center gap-1.5 font-bold text-amber-300">
-                        <span className="text-sm">{currentTranslationEdition.flag}</span>
-                        <span>{currentTranslationEdition.languageNameNative} ({currentTranslationEdition.languageNameAr})</span>
-                      </div>
-                      <span className="text-[10px] text-emerald-400/90 font-medium">
-                        {currentTranslationEdition.translatorName}
-                      </span>
-                    </div>
-
-                    {isTranslationLoading && !translationTexts[ayah.number] ? (
-                      <div className="space-y-1.5 py-1">
-                        <div className="h-3.5 bg-[#142E24] animate-pulse rounded w-11/12" />
-                        <div className="h-3.5 bg-[#142E24] animate-pulse rounded w-3/4" />
-                      </div>
-                    ) : (
-                      <p className="text-xs sm:text-[13px] leading-relaxed text-slate-100 select-text font-sans">
-                        {translationTexts[ayah.number] || 'الترجمة غير متوفرة لهذه الآية حالياً.'}
-                      </p>
-                    )}
-                  </div>
-                )}
 
                 {/* Small compact Tafsir under the Ayah with blue verification badge and source */}
                 {showTafsirUnderAyah && ayah.tafsir && (
@@ -990,28 +794,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
               </p>
             </div>
 
-            {/* Meaning Translation in Modal (if enabled) */}
-            {translationEdition !== 'none' && (
-              <div
-                className={`p-3.5 rounded-xl bg-[#0B1A14] border border-emerald-500/30 text-slate-100 ${
-                  currentTranslationEdition.direction === 'ltr' ? 'text-left' : 'text-right'
-                }`}
-                dir={currentTranslationEdition.direction}
-              >
-                <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#163328] text-[11px]">
-                  <span className="font-bold text-amber-300 flex items-center gap-1.5">
-                    <span>{currentTranslationEdition.flag}</span>
-                    <span>ترجمة المعاني ({currentTranslationEdition.languageNameNative})</span>
-                  </span>
-                  <span className="text-[10px] text-emerald-400/80">
-                    {currentTranslationEdition.translatorName}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-100 leading-relaxed font-sans select-text">
-                  {translationTexts[selectedAyahForTafsir.number] || 'الترجمة غير متوفرة لهذه الآية حالياً.'}
-                </p>
-              </div>
-            )}
 
             {/* Tafsir text */}
             <div className="space-y-2">
