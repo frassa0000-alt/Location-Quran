@@ -116,6 +116,29 @@ export const RADIO_STATIONS: RadioStation[] = [
     coordinates: { lat: 21.4225, lng: 39.8262 }
   },
   {
+    id: 'dossari_radio',
+    name: 'إذاعة الشيخ ياسر الدوسري',
+    description: 'تلاوات خاشعة شجية لإمام الحرم المكي الشريف الشيخ ياسر الدوسري 24/7',
+    url: 'https://backup.qurango.net/radio/yasser_aldosari',
+    fallbackUrls: ['https://backup.qurango.net/radio/ibrahim_aldosari'],
+    category: 'reciter',
+    city: 'مكة المكرمة',
+    country: 'السعودية',
+    timeZone: 'Asia/Riyadh',
+    coordinates: { lat: 21.4225, lng: 39.8262 }
+  },
+  {
+    id: 'ajmi_radio',
+    name: 'إذاعة الشيخ أحمد بن علي العجمي',
+    description: 'تلاوات ندية ومؤثرة بصوت القارئ أحمد بن علي العجمي على مدار الساعة',
+    url: 'https://backup.qurango.net/radio/ahmad_alajmy',
+    category: 'reciter',
+    city: 'الخبر',
+    country: 'السعودية',
+    timeZone: 'Asia/Riyadh',
+    coordinates: { lat: 26.2172, lng: 50.1971 }
+  },
+  {
     id: 'tafsir_radio',
     name: 'إذاعة تفسير القرآن الكريم',
     description: 'شرح وتفسير معاني الآيات والسور الكريمة بتوقيت القاهرة',

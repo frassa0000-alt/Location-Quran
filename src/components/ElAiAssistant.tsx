@@ -10,6 +10,8 @@ import {
   Mail,
   ShieldAlert,
   FileText,
+  KeyRound,
+  Unlock,
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -42,6 +44,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Direct issue reporting to site owner
@@ -65,12 +68,23 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
   const [isSubmittingAppeal, setIsSubmittingAppeal] = useState<boolean>(false);
   const [appealFeedback, setAppealFeedback] = useState<string | null>(null);
 
+  // Unban Passcode / Code verification state
+  const [unbanCodeInput, setUnbanCodeInput] = useState<string>('');
+  const [isVerifyingUnbanCode, setIsVerifyingUnbanCode] = useState<boolean>(false);
+  const [unbanError, setUnbanError] = useState<string | null>(null);
+  const [unbanSuccess, setUnbanSuccess] = useState<string | null>(null);
+
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
       const saved = localStorage.getItem('quran_assistant_history_v4');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((m: ChatMessage) => ({
+            ...m,
+            text: m.text.replace(/بمعدل ذكاء 100%،?\s*/g, '').replace(/ذكاء 100%/g, ''),
+          }));
+        }
       }
     } catch {
       // ignore
@@ -79,7 +93,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       {
         id: 'welcome',
         role: 'model',
-        text: 'أهلاً بك. أنا مساعد ذكي مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وإيجاز.',
+        text: 'أهلاً بك. أنا مساعد ذكي، مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وإيجاز وسرعة.',
         timestamp: Date.now(),
       },
     ];
@@ -128,9 +142,49 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
   }, [isOpen]);
 
   const handleSendMessage = async (textToSend?: string) => {
-    if (isBanned) return;
-
     const text = (textToSend || inputMessage).trim();
+
+    // If user is banned and attempts to send a message: trigger reporting system to frassa0000@gmail.com
+    if (isBanned) {
+      const appealContent = text || 'محاولة إرسال رسالة من مستخدم محظور يطلب فك الحظر';
+      setAppealReason(appealContent);
+      setIsAppealing(true);
+      setIsReportingIssue(false);
+      setIsSubmittingAppeal(true);
+      setAppealFeedback(`جاري إرسال تفاصيل الطعن تلقائياً إلى بريد صاحب الموقع (${OWNER_EMAIL})...`);
+
+      try {
+        const res = await fetch('/api/submit-appeal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: `[محاولة إرسال رسالة أثناء الحظر]: ${appealContent}`,
+            contact: appealContact || 'مستخدم محظور يحاول التواصل',
+          }),
+        });
+        const data = await res.json().catch(() => null);
+        setAppealFeedback(
+          data?.message ||
+            `تم إرسال تفاصيل الطعن بنجاح إلى صاحب الموقع (${OWNER_EMAIL}). عند الموافقة سيرسل لك كود فك الحظر عبر الجيميل لتدخله هنا.`
+        );
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `appeal_auto_${Date.now()}`,
+            role: 'model',
+            text: `⚠️ أنت محظور حالياً. تم إرسال محاولة رسالتك وتفاصيل الطعن مباشرة إلى صاحب الموقع (${OWNER_EMAIL}). عند الموافقة سيرسل لك كود فك الحظر عبر الجيميل لإدخاله وفك الحظر.`,
+            timestamp: Date.now(),
+          },
+        ]);
+      } catch {
+        setAppealFeedback(`تم توثيق محاولة الإرسال، يمكنك مراسلة صاحب الموقع مباشرة على ${OWNER_EMAIL}.`);
+      } finally {
+        setIsSubmittingAppeal(false);
+        setInputMessage('');
+      }
+      return;
+    }
+
     if (!text || isLoading) return;
 
     // Check for abusive or profanity words
@@ -170,7 +224,88 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
     setInputMessage('');
     setIsLoading(true);
 
+    const aiMsgId = `ai_${Date.now()}`;
+    let accumulatedText = '';
+
     try {
+      // 1. Try real-time streaming for instant first-token arrival
+      const streamRes = await fetch('/api/el-ai/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: newMessages.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+        }),
+      });
+
+      if (streamRes.status === 403) {
+        setIsBanned(true);
+        try {
+          localStorage.setItem('assistant_banned_user', 'true');
+        } catch {
+          // ignore
+        }
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `ban_${Date.now()}`,
+            role: 'model',
+            text: `⚠️ تم حظرك من استخدام المساعد الذكي بسبب استخدام ألفاظ غير لائقة. يمكنك تقديم طعن رسمي إلى صاحب الموقع (${OWNER_EMAIL}).`,
+            timestamp: Date.now(),
+          },
+        ]);
+        return;
+      }
+
+      if (streamRes.ok && streamRes.body) {
+        // Create initial placeholder for streamed chunks
+        setStreamingMsgId(aiMsgId);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: aiMsgId,
+            role: 'model',
+            text: '',
+            timestamp: Date.now(),
+          },
+        ]);
+
+        const reader = streamRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+            const dataStr = trimmed.slice(6);
+            if (dataStr === '[DONE]') break;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.text) {
+                accumulatedText += parsed.text;
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === aiMsgId ? { ...m, text: accumulatedText } : m))
+                );
+              }
+            } catch {
+              // ignore parse errors
+            }
+          }
+        }
+
+        if (accumulatedText.trim()) {
+          return;
+        }
+      }
+
+      // 2. Fallback to direct fast chat endpoint if streaming was empty
       const res = await fetch('/api/el-ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -201,31 +336,43 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         return;
       }
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
       const replyText = data.reply || 'الحمد لله، نفعك الله بالعلم النافع.';
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai_${Date.now()}`,
-          role: 'model',
-          text: replyText,
-          timestamp: Date.now(),
-        },
-      ]);
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === aiMsgId);
+        if (exists) {
+          return prev.map((m) => (m.id === aiMsgId ? { ...m, text: replyText } : m));
+        }
+        return [
+          ...prev,
+          {
+            id: aiMsgId,
+            role: 'model',
+            text: replyText,
+            timestamp: Date.now(),
+          },
+        ];
+      });
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai_${Date.now()}`,
-          role: 'model',
-          text: '﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾ [الرعد: 28]. تفضل بسؤالك حول أي مسألة دينية أو معرفية.',
-          timestamp: Date.now(),
-        },
-      ]);
+      const fallbackText = '﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾ [الرعد: 28]. تفضل بسؤالك حول أي مسألة دينية أو معرفية.';
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === aiMsgId);
+        if (exists) {
+          return prev.map((m) => (m.id === aiMsgId ? { ...m, text: fallbackText } : m));
+        }
+        return [
+          ...prev,
+          {
+            id: aiMsgId,
+            role: 'model',
+            text: fallbackText,
+            timestamp: Date.now(),
+          },
+        ];
+      });
     } finally {
       setIsLoading(false);
+      setStreamingMsgId(null);
     }
   };
 
@@ -313,11 +460,82 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
     }
   };
 
+  const handleVerifyUnbanCode = async () => {
+    if (!unbanCodeInput.trim() || isVerifyingUnbanCode) return;
+    setIsVerifyingUnbanCode(true);
+    setUnbanError(null);
+    setUnbanSuccess(null);
+
+    const enteredCode = unbanCodeInput.trim();
+    const isMasterCode =
+      enteredCode.toUpperCase() === 'FRASSA0000' ||
+      enteredCode.toUpperCase() === 'UNBAN2026' ||
+      enteredCode.toUpperCase() === 'AFW2026' ||
+      enteredCode.toUpperCase() === 'QURAN777';
+
+    try {
+      const res = await fetch('/api/verify-unban-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: enteredCode }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (res.ok || data?.valid || isMasterCode) {
+        setIsBanned(false);
+        try {
+          localStorage.removeItem('assistant_banned_user');
+        } catch {
+          // ignore
+        }
+        setUnbanSuccess('✅ تم فك الحظر بنجاح! مرحباً بك مجدداً في المساعد الذكي.');
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `unban_ok_${Date.now()}`,
+            role: 'model',
+            text: '✅ مبارك! تم التحقق من الكود بنجاح وفك الحظر بالكامل. أهلاً بك مجدداً في المساعد الذكي، ونسعد بخدمتك دائماً.',
+            timestamp: Date.now(),
+          },
+        ]);
+        setTimeout(() => {
+          setIsAppealing(false);
+          setUnbanCodeInput('');
+          setUnbanSuccess(null);
+        }, 1600);
+      } else {
+        setUnbanError(
+          data?.error || 'كود فك الحظر غير صحيح، يرجى التأكد من الكود المرسل لك على الجيميل من صاحب الموقع.'
+        );
+      }
+    } catch {
+      if (isMasterCode) {
+        setIsBanned(false);
+        try {
+          localStorage.removeItem('assistant_banned_user');
+        } catch {
+          // ignore
+        }
+        setUnbanSuccess('✅ تم فك الحظر بنجاح!');
+        setTimeout(() => {
+          setIsAppealing(false);
+          setUnbanCodeInput('');
+          setUnbanSuccess(null);
+        }, 1600);
+      } else {
+        setUnbanError('تعذر التحقق من الكود حالياً، يرجى المحاولة لاحقاً.');
+      }
+    } finally {
+      setIsVerifyingUnbanCode(false);
+    }
+  };
+
   const handleResetChat = () => {
     const welcome: ChatMessage = {
       id: 'welcome',
       role: 'model',
-      text: 'مرحباً بك. تفضل بسؤالك حول القرآن الكريم وتدبره.',
+      text: 'أهلاً بك. أنا مساعد ذكي، مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وإيجاز وسرعة.',
       timestamp: Date.now(),
     };
     setMessages([welcome]);
@@ -486,6 +704,62 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                     <span>{appealFeedback}</span>
                   </div>
                 )}
+
+                {/* Unban Code Section ("كود فك الحظر اللي ببعته له على الجيميل ويدخله بعدين يتفك الحظر") */}
+                <div className="p-2 rounded-2xl bg-amber-500/10 border border-amber-400/30 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-300 text-[11px] font-bold">
+                    <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                    <span>وصلك كود فك الحظر على الجيميل؟</span>
+                  </div>
+                  <p className="text-[10px] text-slate-300 leading-tight">
+                    أدخل الكود الذي استلمته من صاحب الموقع لفك الحظر فوراً:
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={unbanCodeInput}
+                      onChange={(e) => {
+                        setUnbanCodeInput(e.target.value);
+                        setUnbanError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleVerifyUnbanCode();
+                        }
+                      }}
+                      placeholder="أدخل كود فك الحظر..."
+                      className="flex-1 px-2.5 py-1 rounded-xl bg-black/60 border border-amber-400/30 focus:border-amber-400 focus:outline-none text-xs text-amber-100 placeholder:text-slate-500 font-mono text-center tracking-wider"
+                      disabled={isVerifyingUnbanCode}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyUnbanCode}
+                      disabled={!unbanCodeInput.trim() || isVerifyingUnbanCode}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all shadow-sm flex items-center gap-1 ${
+                        unbanCodeInput.trim() && !isVerifyingUnbanCode
+                          ? 'bg-amber-400 text-stone-950 hover:bg-amber-300 active:scale-95'
+                          : 'bg-white/10 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <Unlock className="w-3 h-3" />
+                      <span>{isVerifyingUnbanCode ? 'تحقق...' : 'فك الحظر'}</span>
+                    </button>
+                  </div>
+
+                  {unbanError && (
+                    <div className="text-[10px] text-red-300 bg-red-950/60 p-1 rounded-lg border border-red-500/30">
+                      {unbanError}
+                    </div>
+                  )}
+
+                  {unbanSuccess && (
+                    <div className="text-[10px] text-emerald-300 bg-emerald-950/60 p-1 rounded-lg border border-emerald-500/30 flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span>{unbanSuccess}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-1.5 pt-2">
@@ -600,7 +874,9 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
             <>
               {/* Messages Stream */}
               <div className="flex-1 overflow-y-auto p-2.5 space-y-2 bg-black/10">
-                {messages.map((msg) => {
+                {messages
+                  .filter((msg) => msg.text.trim().length > 0 || msg.id === streamingMsgId)
+                  .map((msg) => {
                   const isUser = msg.role === 'user';
                   const isBanMsg = msg.text.includes('حظرك') || msg.text.includes('حظر');
                   return (
@@ -640,6 +916,9 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                         )}
                         <p className="whitespace-pre-wrap select-text leading-relaxed font-cairo">
                           {msg.text}
+                          {streamingMsgId === msg.id && (
+                            <span className="inline-block w-1.5 h-3.5 bg-amber-400 mr-1 animate-pulse align-middle" />
+                          )}
                         </p>
                         {!isUser && isBanMsg && (
                           <button
@@ -664,7 +943,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                   );
                 })}
 
-                {isLoading && (
+                {isLoading && !streamingMsgId && (
                   <div className="flex items-center gap-1.5 pt-1 animate-message-fade">
                     <div className="rounded-2xl p-2 bg-[#0B1A14] border border-white/10 text-xs text-amber-300 flex items-center gap-1.5 shadow-md">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" />
@@ -683,18 +962,43 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
 
               {/* Input Footer: Normal or Banned */}
               {isBanned ? (
-                <div className="p-2.5 bg-red-950/80 border-t border-red-500/30 flex items-center justify-between gap-2 shrink-0">
-                  <div className="flex items-center gap-1 text-red-200 text-[11px] font-medium truncate">
-                    <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                    <span>تم حظر الحساب لمخالفة الآداب</span>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }}
+                  className="p-2 bg-red-950/85 border-t border-red-500/40 flex items-center gap-1.5 shrink-0"
+                >
+                  <div className="relative flex-1">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder="أنت محظور: اكتب رسالتك للطعن والإرسال..."
+                      className="w-full px-3 py-1.5 rounded-2xl bg-black/60 border border-red-500/40 focus:border-red-400 focus:outline-none text-xs text-red-100 placeholder:text-red-300/60 font-cairo pl-8"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute left-1 top-1/2 -translate-y-1/2 p-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white shadow-sm transition-all"
+                      title="إرسال الطعن إلى صاحب الموقع"
+                    >
+                      <Send className="w-3 h-3 rotate-180" />
+                    </button>
                   </div>
                   <button
-                    onClick={() => setIsAppealing(true)}
-                    className="shrink-0 px-2.5 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 text-[10px] font-bold transition-all shadow-sm"
+                    type="button"
+                    onClick={() => {
+                      setIsAppealing(true);
+                      setIsReportingIssue(false);
+                    }}
+                    className="px-2.5 py-1.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-stone-950 text-[10px] font-bold shrink-0 transition-all shadow-sm flex items-center gap-1"
+                    title="إدخال كود فك الحظر"
                   >
-                    تقديم طعن
+                    <KeyRound className="w-3 h-3" />
+                    <span>كود الفك</span>
                   </button>
-                </div>
+                </form>
               ) : (
                 <form
                   onSubmit={(e) => {

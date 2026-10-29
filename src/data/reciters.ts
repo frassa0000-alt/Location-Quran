@@ -68,9 +68,25 @@ export const RECITERS: Reciter[] = [
     id: 'ajmy',
     name: 'أحمد بن علي العجمي',
     subname: 'رواية حفص عن عاصم',
-    style: 'مرتل',
-    serverUrl: 'https://server10.mp3quran.net/ajm',
-    ayahSubfolder: 'Ahmed_ibn_Ali_al-Ajamy_128kbps_KetabAllah.net'
+    style: 'مرتل خاشع',
+    serverUrl: 'https://cdn.mp3quran.net/audio/ahmad-ajmi/r1',
+    ayahSubfolder: 'Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com'
+  },
+  {
+    id: 'dossari',
+    name: 'ياسر بن راشد الدوسري',
+    subname: 'إمام الحرم المكي الشريف',
+    style: 'تلاوة خاشعة شجية',
+    serverUrl: 'https://cdn.mp3quran.net/audio/yasser-dosari/r1',
+    ayahSubfolder: 'Yasser_Ad-Dussary_128kbps'
+  },
+  {
+    id: 'ibrahim_dossari',
+    name: 'إبراهيم الدوسري',
+    subname: 'رواية حفص عن عاصم',
+    style: 'مرتل متقن',
+    serverUrl: 'https://cdn.mp3quran.net/audio/ibrahim-dosari/r2',
+    ayahSubfolder: 'Alafasy_128kbps'
   }
 ];
 
