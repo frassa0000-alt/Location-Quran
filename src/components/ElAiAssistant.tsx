@@ -13,6 +13,7 @@ import {
   KeyRound,
   Unlock,
 } from 'lucide-react';
+import { getSmartIslamicAnswer } from '../utils/islamicKnowledgeEngine';
 
 interface ChatMessage {
   id: string;
@@ -80,10 +81,16 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((m: ChatMessage) => ({
-            ...m,
-            text: m.text.replace(/بمعدل ذكاء 100%،?\s*/g, '').replace(/ذكاء 100%/g, ''),
-          }));
+          const cleaned = parsed
+            .map((m: ChatMessage) => ({
+              ...m,
+              text: m.text.replace(/بمعدل ذكاء 100%،?\s*/g, '').replace(/ذكاء 100%/g, ''),
+            }))
+            // Filter out old repeated fallback messages
+            .filter((m: ChatMessage) => !m.text.includes('﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾'));
+          if (cleaned.length > 0) {
+            return cleaned;
+          }
         }
       }
     } catch {
@@ -336,7 +343,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         return;
       }
 
-      const replyText = data.reply || 'الحمد لله، نفعك الله بالعلم النافع.';
+      const replyText = data?.reply || getSmartIslamicAnswer(text, OWNER_EMAIL);
 
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === aiMsgId);
@@ -354,7 +361,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         ];
       });
     } catch {
-      const fallbackText = '﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾ [الرعد: 28]. تفضل بسؤالك حول أي مسألة دينية أو معرفية.';
+      const fallbackText = getSmartIslamicAnswer(text, OWNER_EMAIL);
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === aiMsgId);
         if (exists) {

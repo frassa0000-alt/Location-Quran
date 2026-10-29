@@ -4,6 +4,7 @@ import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getSmartIslamicAnswer } from './src/utils/islamicKnowledgeEngine.ts';
 
 dotenv.config();
 
@@ -14,6 +15,15 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('REQUEST_TIMEOUT')), timeoutMs)
+    ),
+  ]);
+}
 
 // Initialize GoogleGenAI server-side with telemetry header
 const apiKey = process.env.GEMINI_API_KEY || '';
@@ -209,63 +219,51 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
 
       let responseStream;
       try {
-        // Ultra-low latency primary model (instant first token)
-        responseStream = await ai.models.generateContentStream({
-          model: 'gemini-3.1-flash-lite',
-          contents,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            temperature: 0.2,
-            thinkingConfig: {
-              thinkingLevel: ThinkingLevel.MINIMAL,
-            },
-            maxOutputTokens: 300,
-          },
-        });
-      } catch (e: any) {
-        console.warn('gemini-3.1-flash-lite stream error, falling back to gemini-3.8-flash:', e?.status || e?.message);
-        try {
-          responseStream = await ai.models.generateContentStream({
+        // Ultra-fast streaming with a strict 2.5-second timeout
+        responseStream = await withTimeout(
+          ai.models.generateContentStream({
             model: 'gemini-3.8-flash',
             contents,
             config: {
               systemInstruction: SYSTEM_INSTRUCTION,
               temperature: 0.2,
-              thinkingConfig: {
-                thinkingLevel: ThinkingLevel.LOW,
-              },
               maxOutputTokens: 300,
             },
-          });
-        } catch (e2: any) {
-          console.warn('gemini-3.8-flash stream fallback failed:', e2?.status || e2?.message);
-          throw e2;
-        }
-      }
+          }),
+          2500
+        );
 
-      for await (const chunk of responseStream) {
-        if (chunk.text) {
-          res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-          if (typeof (res as any).flush === 'function') {
-            (res as any).flush();
+        for await (const chunk of responseStream) {
+          if (chunk.text) {
+            res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+            if (typeof (res as any).flush === 'function') {
+              (res as any).flush();
+            }
           }
         }
-      }
 
-      res.write(`data: [DONE]\n\n`);
-      res.end();
-      return;
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+        return;
+      } catch (streamErr: any) {
+        console.warn('AI Stream timeout or unavailable, using smart answer engine:', streamErr?.message);
+        const smartReply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+        res.write(`data: ${JSON.stringify({ text: smartReply })}\n\n`);
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+        return;
+      }
     }
 
     // Fallback if offline
-    const fallbackReply = generateSmartResponse(userPrompt);
+    const fallbackReply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
     res.write(`data: ${JSON.stringify({ text: fallbackReply })}\n\n`);
     res.write(`data: [DONE]\n\n`);
     res.end();
   } catch (err: any) {
     console.error('Stream error:', err);
     try {
-      const fallback = generateSmartResponse(req.body?.message || '');
+      const fallback = getSmartIslamicAnswer(req.body?.message || '', OWNER_EMAIL);
       res.write(`data: ${JSON.stringify({ text: fallback })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
@@ -320,83 +318,42 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
 
       let response;
       try {
-        response = await ai.models.generateContent({
-          model: 'gemini-3.1-flash-lite',
-          contents,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            temperature: 0.2,
-            thinkingConfig: {
-              thinkingLevel: ThinkingLevel.MINIMAL,
+        response = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents,
+            config: {
+              systemInstruction: SYSTEM_INSTRUCTION,
+              temperature: 0.2,
+              maxOutputTokens: 300,
             },
-            maxOutputTokens: 300,
-          },
-        });
-      } catch (e: any) {
-        console.warn('gemini-3.1-flash-lite busy, falling back to gemini-3.8-flash:', e?.status || e?.message);
-        response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            temperature: 0.2,
-            thinkingConfig: {
-              thinkingLevel: ThinkingLevel.LOW,
-            },
-            maxOutputTokens: 300,
-          },
-        });
-      }
+          }),
+          2500
+        );
 
-      const replyText = response?.text || 'الحمد لله، نفعك الله بالعلم النافع.';
-      res.json({ reply: replyText });
-      return;
+        const replyText = response?.text || getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+        res.json({ reply: replyText });
+        return;
+      } catch (e: any) {
+        console.warn('AI generateContent timeout or unavailable, using smart answer engine:', e?.message);
+        const reply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+        res.json({ reply });
+        return;
+      }
     }
 
     // Graceful fallback if offline
-    const fallbackReply = generateSmartResponse(userPrompt);
+    const fallbackReply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
     res.json({ reply: fallbackReply });
   } catch (err: any) {
     console.error('Chat error:', err);
-    const fallback = generateSmartResponse(req.body?.message || '');
+    const fallback = getSmartIslamicAnswer(req.body?.message || '', OWNER_EMAIL);
     res.json({ reply: fallback });
   }
 });
 
 function generateSmartResponse(prompt: string): string {
-  const p = prompt.toLowerCase();
-  if (containsProfanity(prompt)) {
-    return 'تم حظرك لاستخدام ألفاظ غير لائقة.';
-  }
-  if (p.includes('ذكاء') || p.includes('من أنت') || p.includes('مين انت') || p.includes('عرف نفسك')) {
-    return 'أنا مساعد ذكي، مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وسرعة وإيجاز.';
-  }
-  if (p.includes('مشكلة') || p.includes('عطل') || p.includes('صاحب الموقع') || p.includes('مش شغال') || p.includes('خطأ')) {
-    return `إذا كانت لديك أي مشكلة أو عطل في الموقع، يمكنك الضغط على زر «إرسال لصاحب الموقع» أو مراسلته مباشرة على ${OWNER_EMAIL}.`;
-  }
-  if (p.includes('صبر') || p.includes('ابتلاء')) {
-    return 'قال تعالى: ﴿إِنَّمَا يُوَفَّى الصَّابِرُونَ أَجْرَهُم بِغَيْرِ حِسَابٍ﴾ [الزمر: 10]. الصبر عاقبته خير وأجره عظيم.';
-  }
-  if (p.includes('كهف') || p.includes('جمعة')) {
-    return 'قال النبي ﷺ: «مَنْ قَرَأَ سُورَةَ الْكَهْفِ فِي يَوْمِ الْجُمُعَةِ أَضَاءَ لَهُ مِنَ النُّورِ مَا بَيْنَ الْجُمُعَتَيْنِ» [رواه البيهقي].';
-  }
-  if (p.includes('كرسي')) {
-    return 'آية الكرسي هي الآية 255 من سورة البقرة: ﴿اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...﴾، وهي أعظم آية في كتاب الله تعالى.';
-  }
-  if (p.includes('والدين') || p.includes('ام') || p.includes('اب')) {
-    return 'قال تعالى: ﴿وَقَضَىٰ رَبُّكَ أَلَّا تَعْبُدُوا إِلَّا إِيَّاهُ وَبِالْوَالِدَيْنِ إِحْسَانًا﴾ [الإسراء: 23]. بر الوالدين من أعظم القربات.';
-  }
-  if (p.includes('توبة') || p.includes('استغفار')) {
-    return 'قال تعالى: ﴿قُلْ يَا عِبَادِيَ الَّذِينَ أَسْرَفُوا عَلَىٰ أَنفُسِهِمْ لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ ۚ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا﴾ [الزمر: 53].';
-  }
-  if (p.includes('عاصمة مصر') || p.includes('مصر')) {
-    return 'عاصمة جمهورية مصر العربية هي القاهرة، وهي كبرى مدن العالم العربي وقارة إفريقيا.';
-  }
-  if (p.includes('سرعة الضوء')) {
-    return 'سرعة الضوء في الفراغ تبلغ حوالي 299,792,458 متراً في الثانية (قرابة 300 ألف كيلومتر/ثانية).';
-  }
-
-  return 'أهلاً بك. أنا مساعد ذكي مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وسرعة وإيجاز.';
+  return getSmartIslamicAnswer(prompt, OWNER_EMAIL);
 }
 
 // Development vs Production serving
