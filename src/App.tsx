@@ -19,7 +19,6 @@ import { Footer } from './components/Footer';
 import { QuranSplashIntro } from './components/QuranSplashIntro';
 import { SpiritualWaveCanvas } from './components/SpiritualWaveCanvas';
 import { ElAiAssistant } from './components/ElAiAssistant';
-import { HiQrWorkspace } from './components/HiQr/HiQrWorkspace';
 import { SURAHS_LIST } from './data/surahs';
 import { WifiOff } from 'lucide-react';
 
@@ -31,7 +30,7 @@ interface Bookmark {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('hi-qr');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('catalog');
   const [currentSurahNumber, setCurrentSurahNumber] = useState<number>(1);
   const [targetAyahNumber, setTargetAyahNumber] = useState<number>(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -228,17 +227,6 @@ export default function App() {
     }
     return 'dark bg-[#0A0E13] text-[#F1F5F9]';
   };
-
-  if (activeTab === 'hi-qr') {
-    return (
-      <HiQrWorkspace
-        onOpenQuranHub={() => {
-          setActiveTab('catalog');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-      />
-    );
-  }
 
   return (
     <div className={`min-h-screen flex flex-col font-cairo transition-colors duration-200 relative ${getThemeClasses()}`} dir="rtl">

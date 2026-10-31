@@ -13,6 +13,12 @@ import {
   KeyRound,
   Unlock,
   Image as ImageIcon,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { getUniversalAIAnswer } from '../utils/aiUniversalEngine';
 
@@ -116,6 +122,69 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
     e.target.value = '';
   };
 
+  // Expanded Window & Voice State for HIQr
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isRecordingVoice, setIsRecordingVoice] = useState<boolean>(false);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const handleToggleVoiceRecording = () => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('خاصية التعرف على الصوت غير مدعومة في هذا المتصفح.');
+      return;
+    }
+
+    if (isRecordingVoice) {
+      recognitionRef.current?.stop();
+      setIsRecordingVoice(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ar-SA';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) {
+          setInputMessage((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+        setIsRecordingVoice(false);
+      };
+
+      recognition.onerror = () => setIsRecordingVoice(false);
+      recognition.onend = () => setIsRecordingVoice(false);
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsRecordingVoice(true);
+    } catch {
+      setIsRecordingVoice(false);
+    }
+  };
+
+  const handleToggleSpeak = (msgId: string, text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    if (speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+    } else {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(msgId);
+      const clean = text.replace(/[*#_~`]/g, '');
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.lang = 'ar-SA';
+      utterance.onend = () => setSpeakingMsgId(null);
+      utterance.onerror = () => setSpeakingMsgId(null);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   // Direct issue reporting to site owner
   const [isReportingIssue, setIsReportingIssue] = useState<boolean>(false);
   const [issueText, setIssueText] = useState<string>('');
@@ -172,7 +241,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       {
         id: 'welcome',
         role: 'model',
-        text: 'أهلاً بك! أنا مساعد ذكاء اصطناعي شامل ومتكامل، مستعد للإجابة عن أي سؤال خارجي أو داخلي في العلوم، التكنولوجيا، الرياضيات، التاريخ، الجغرافيا، اللغات، والدين بدقة وفورية.',
+        text: 'أهلاً بك! أنا HIQr، مساعد الذكاء الاصطناعي الشامل والمتكامل، مستعد للإجابة عن أي سؤال خارجي أو داخلي في العلوم، البرمجة، الرياضيات، التاريخ، اللغات، والدين، بالإضافة لقراءة وفحص الصور بدقة وفورية.',
         timestamp: Date.now(),
       },
     ];
@@ -641,12 +710,12 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         <button
           onClick={toggleEnabled}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full ios-liquid-glass text-xs font-bold text-amber-200/90 hover:text-amber-100 shadow-xl hover:scale-105 active:scale-95 transition-all border border-amber-400/40"
-          title="إظهار ™✓"
+          title="إظهار HIQr"
         >
           <Eye className="w-3.5 h-3.5 text-amber-400" />
-          <span className="flex items-center gap-0.5" dir="ltr">
-            <span className="text-amber-300 font-mono text-[11px] font-bold">™</span>
-            <span className="text-emerald-400 font-bold">✓</span>
+          <span className="flex items-center gap-1 font-bold" dir="ltr">
+            <span className="text-amber-300 font-mono text-xs font-black tracking-wider">HIQr</span>
+            <span className="text-emerald-400 font-bold text-xs">✓</span>
           </span>
         </button>
       </div>
@@ -658,19 +727,24 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       {/* Suspended Chat Window ("شات متعلق في الهوا بأنيميشن جميل") */}
       {isOpen && (
         <div
-          className="fixed bottom-16 sm:bottom-20 left-3 sm:left-6 z-50 w-[275px] sm:w-[295px] max-w-[92vw] h-[360px] sm:h-[390px] max-h-[72vh] rounded-3xl ios-liquid-glass-dock shadow-2xl flex flex-col overflow-hidden text-right border border-white/20 animate-spring-popup"
+          className={`fixed bottom-16 sm:bottom-20 left-3 sm:left-6 z-50 rounded-3xl ios-liquid-glass-dock shadow-2xl flex flex-col overflow-hidden text-right border border-white/20 animate-spring-popup transition-all duration-300 ${
+            isExpanded
+              ? 'w-[94vw] sm:w-[620px] h-[82vh] max-h-[82vh]'
+              : 'w-[295px] sm:w-[335px] max-w-[94vw] h-[410px] sm:h-[460px] max-h-[76vh]'
+          }`}
           dir="rtl"
         >
           {/* Top Liquid Specular Rim with subtle gradient */}
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none" />
 
-          {/* Minimalist Header: strictly '™✓' + compact actions */}
+          {/* Minimalist Header: strictly 'HIQr' + compact actions */}
           <div className="px-3.5 py-2.5 bg-gradient-to-r from-[#0C221A] via-[#0E2C22] to-[#0A1A14] border-b border-white/10 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5 text-sm font-bold" dir="ltr">
-                <span className="text-amber-300 font-mono text-xs font-bold">™</span>
-                <span className="text-emerald-400 font-bold text-sm drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]">✓</span>
+              <div className="flex items-center gap-1 text-sm font-bold" dir="ltr">
+                <span className="text-amber-300 font-mono text-xs sm:text-sm font-black tracking-wider">HIQr</span>
+                <span className="text-emerald-400 font-black text-sm drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]">✓</span>
               </div>
+              <span className="text-[10px] text-emerald-300/80 font-medium hidden sm:inline">الذكاء الاصطناعي</span>
               {isBanned && (
                 <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-500/30 border border-red-500/40 text-red-300 font-bold">
                   محظور
@@ -678,8 +752,15 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
               )}
             </div>
 
-            {/* Actions: Report Issue to Owner, Reset, Hide, Close */}
+            {/* Actions: Maximize, Report, Reset, Hide, Close */}
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => setIsExpanded((prev) => !prev)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-white/10 transition-colors"
+                title={isExpanded ? 'تصغير النافذة' : 'تكبير النافذة'}
+              >
+                {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </button>
               {isBanned ? (
                 <button
                   onClick={() => {
@@ -984,21 +1065,38 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                       >
                         {!isUser && (
                           <div className="flex items-center justify-between pb-1 mb-1 border-b border-white/10 text-[9px] text-slate-400">
-                            <span className="flex items-center gap-0.5 text-[10px] font-bold" dir="ltr">
-                              <span className="text-amber-300 font-mono text-[9px]">™</span>
+                            <span className="flex items-center gap-1 text-[10px] font-bold" dir="ltr">
+                              <span className="text-amber-300 font-mono text-[9px] font-black tracking-wider">HIQr</span>
                               <span className="text-emerald-400">✓</span>
                             </span>
-                            <button
-                              onClick={() => handleCopy(msg.id, msg.text)}
-                              className="flex items-center gap-1 text-slate-400 hover:text-amber-300 transition-colors"
-                              title="نسخ"
-                            >
-                              {copiedId === msg.id ? (
-                                <Check className="w-2.5 h-2.5 text-emerald-400" />
-                              ) : (
-                                <Copy className="w-2.5 h-2.5" />
-                              )}
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleSpeak(msg.id, msg.text)}
+                                className={`p-1 rounded-md hover:bg-white/10 transition-colors ${
+                                  speakingMsgId === msg.id ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-amber-300'
+                                }`}
+                                title={speakingMsgId === msg.id ? 'إيقاف الصوت' : 'استماع (TTS)'}
+                              >
+                                {speakingMsgId === msg.id ? (
+                                  <VolumeX className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
+                                ) : (
+                                  <Volume2 className="w-2.5 h-2.5" />
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(msg.id, msg.text)}
+                                className="flex items-center gap-1 text-slate-400 hover:text-amber-300 transition-colors"
+                                title="نسخ"
+                              >
+                                {copiedId === msg.id ? (
+                                  <Check className="w-2.5 h-2.5 text-emerald-400" />
+                                ) : (
+                                  <Copy className="w-2.5 h-2.5" />
+                                )}
+                              </button>
+                            </div>
                           </div>
                         )}
                         {msg.image && (
@@ -1046,8 +1144,8 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" />
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce [animation-delay:0.2s]" />
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce [animation-delay:0.4s]" />
-                      <span className="flex items-center gap-0.5 text-[9px] mr-1 font-bold" dir="ltr">
-                        <span className="text-amber-300 font-mono text-[8px]">™</span>
+                      <span className="flex items-center gap-1 text-[9px] mr-1 font-bold" dir="ltr">
+                        <span className="text-amber-300 font-mono text-[9px] font-black tracking-wider">HIQr</span>
                         <span className="text-emerald-400">✓</span>
                       </span>
                     </div>
@@ -1151,6 +1249,20 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                     <ImageIcon className="w-4 h-4" />
                   </button>
 
+                  <button
+                    type="button"
+                    onClick={handleToggleVoiceRecording}
+                    disabled={isLoading}
+                    className={`p-2 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
+                      isRecordingVoice
+                        ? 'bg-red-500/30 text-red-300 border-red-500/50 animate-pulse shadow-sm'
+                        : 'bg-black/40 border-white/15 text-slate-300 hover:text-emerald-300 hover:border-emerald-400/40'
+                    }`}
+                    title={isRecordingVoice ? 'إيقاف التسجيل الصوتي' : 'إملاء صوتي (Speech-to-Text)'}
+                  >
+                    {isRecordingVoice ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4" />}
+                  </button>
+
                   <div className="relative flex-1">
                     <input
                       ref={inputRef}
@@ -1160,7 +1272,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                       placeholder={
                         selectedImage
                           ? 'اكتب سؤالك عن هذه الصورة أو اضغط إرسال...'
-                          : 'اسأل عن أي شيء أو ارفع صورة لتحليلها...'
+                          : 'اسأل عن أي شيء، أو ارفع صورة، أو تحدث بصوتك...'
                       }
                       className="w-full px-3 py-1.5 rounded-2xl bg-black/40 border border-white/15 focus:border-amber-400 focus:outline-none text-xs text-slate-100 placeholder:text-slate-400 font-cairo pl-8"
                       disabled={isLoading}
@@ -1185,35 +1297,35 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         </div>
       )}
 
-      {/* Floating Trigger Button: Beautiful physics float & aurora halo animation, strictly '™✓' */}
+      {/* Floating Trigger Button: In its exact checkmark place, named strictly 'HIQr' with '✓' */}
       <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-50">
         <button
           onClick={() => setIsOpen((prev) => !prev)}
           className={`relative overflow-hidden group flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full shadow-2xl transition-all duration-300 border animate-float-levitate animate-aurora-halo ${
             isOpen
-              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 border-amber-300 font-bold scale-105 shadow-amber-400/40'
-              : 'ios-liquid-glass text-amber-200 border-amber-400/40 hover:border-amber-300 hover:scale-110 active:scale-95'
+              ? 'bg-gradient-to-r from-amber-400 via-emerald-400 to-amber-500 text-stone-950 border-amber-300 font-bold scale-105 shadow-amber-400/40'
+              : 'ios-liquid-glass text-amber-200 border-emerald-400/40 hover:border-emerald-300 hover:scale-110 active:scale-95'
           }`}
-          title="™✓"
-          aria-label="™✓"
+          title="HIQr"
+          aria-label="HIQr"
         >
           {/* Shimmer light sweep passing across the glass surface */}
           <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none animate-shimmer-sweep" />
 
-          {/* Strictly '™✓' */}
-          <div className="flex items-center gap-0.5 text-xs sm:text-sm font-bold" dir="ltr">
+          {/* Strictly 'HIQr' with the checkmark '✓' */}
+          <div className="flex items-center gap-1 text-xs sm:text-sm font-bold" dir="ltr">
             <span
-              className={`font-mono text-xs font-bold ${
-                isOpen ? 'text-stone-900' : 'text-amber-300'
+              className={`font-mono text-xs sm:text-sm font-black tracking-wider ${
+                isOpen ? 'text-stone-950 font-black' : 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
               }`}
             >
-              ™
+              HIQr
             </span>
             <span
-              className={`font-black ${
+              className={`font-black text-sm sm:text-base ${
                 isOpen
                   ? 'text-stone-950'
-                  : 'text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'
+                  : 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]'
               }`}
             >
               ✓
