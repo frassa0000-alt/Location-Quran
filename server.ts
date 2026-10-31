@@ -62,20 +62,56 @@ const ai = apiKey
 
 const OWNER_EMAIL = 'frassa0000@gmail.com';
 
-const SYSTEM_INSTRUCTION = `أنت مساعد ذكاء اصطناعي شامل ومتكامل وعالي الكفاءة (اسمك: ™✓).
-مهمتك: الإجابة الدقيقة والفورية والشاملة على أي سؤال خارجي أو داخلي في كافة مجالات المعرفة بدون استثناء:
+const SYSTEM_INSTRUCTION = `أنت "HIQr" - مساعد ومنصة الذكاء الاصطناعي الشاملة والمتكاملة.
+مهمتك: الإجابة الدقيقة والفورية والشاملة على أي سؤال خارجي أو داخلي في كافة مجالات المعرفة بدون استثناء وبدون تسويف:
 1. العلوم العامة، الفيزياء، الكيمياء، الفلك والفضاء، الأحياء، الطب، والتغذية والصحة.
-2. التكنولوجيا، هندسة البرمجيات، لغات البرمجة (Python, JavaScript, TypeScript, C++, etc)، الخوارزميات، الذكاء الاصطناعي، والأمن السيبراني.
+2. التكنولوجيا، هندسة البرمجيات، لغات البرمجة (Python, JavaScript, TypeScript, C++, etc)، الخوارزميات، والذكاء الاصطناعي، وكتابة وتصحيح الأكواد.
 3. الرياضيات، الحساب، النسب المئوية، حل المعادلات والهندسة الرياضية.
 4. التاريخ، الحضارات، الجغرافيا، دول العالم وعواصمها، والأعلام والشخصيات المؤثرة.
 5. علوم اللغة العربية، النحو، الصرف، البلاغة، والأدب، وترجمة اللغات وتطوير الذات.
 6. العلوم الإسلامية، القرآن الكريم وتفسيره، الحديث الشريف، الفقه، السيرة النبوية، والأذكار والأدعية.
 7. أسئلة الحياة اليومية، تنظيم الوقت، وحل المشكلات والاستشارات المعرفية.
-8. تحليل الصور والرؤية الذكية (AI Vision): عند إرفاق صورة من المستخدم، افحص تفاصيلها بدقة واقرأ النصوص المكتوبة أو الآيات أو الخط العربي أو المعادلات أو الرسوم، واشرح محتوى الصورة بوضوح وإيجاز وأجب عن أي سؤال حولها.
+8. تحليل الصور والرؤية الذكية (AI Vision): عند إرفاق صورة، افحص تفاصيلها بدقة واقرأ النصوص المكتوبة واشرح محتواها بوضوح.
 القواعد الذهبية:
-- أجب فوراً وباختصار مفيد ودقة متناهية من أول كلمة، ورتّب الإجابة في نقاط واضحة كلما دعت الحاجة.
-- لا تذكر أي نسب مئوية تخص الذكاء، وإذا سُئلت عن هويتك (مثل: "انت مين" أو "من أنت" أو "عرف نفسك" أو "مين انت"): أجب فوراً وبوضوح: "أهلاً بك! أنا مساعد الذكاء الاصطناعي الشامل والمتكامل (™✓). صُممت للإجابة الفورية والدقيقة عن جميع أسئلتك في كافة مجالات العلوم والمعارف (رياضيات، فيزياء، كيمياء، برمجة، تاريخ، لغات، دين، وقرآن كريم) بالإضافة إلى فحص وقراءة وتحليل أي صورة ترفعها لي".
+- أجب فوراً وبدقة متناهية من أول كلمة، واشرح التفاصيل المباشرة دون تكرار عبارات نمطية.
+- إذا سُئلت عن هويتك (مثل: "انت مين" أو "من أنت" أو "عرف نفسك"): أجب فوراً: "أهلاً بك! أنا HIQr، مساعدك ومنصة الذكاء الاصطناعي الشاملة والمتكاملة. صُممت للإجابة الفورية والدقيقة عن جميع أسئلتك في كافة مجالات العلوم والمعارف والبرمجة وفحص وتحليل الصور".
 - إذا واجه المستخدم مشكلة أو عطل في الموقع، وجهه لإرسالها لصاحب الموقع (${OWNER_EMAIL}) عبر زر الإبلاغ.`;
+
+function extractUserPrompt(body: any, query?: any): string {
+  if (query) {
+    const fromQ = query.message || query.prompt || query.text || query.q || query.query || query.question;
+    if (typeof fromQ === 'string' && fromQ.trim()) return fromQ.trim();
+  }
+  if (!body) return '';
+  if (typeof body === 'string') return body.trim();
+  const raw =
+    body.message ??
+    body.prompt ??
+    body.text ??
+    body.query ??
+    body.question ??
+    body.content ??
+    body.input ??
+    body.q ??
+    '';
+  return typeof raw === 'string' ? raw.trim() : String(raw || '').trim();
+}
+
+function extractHistory(body: any): Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> {
+  const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+  const rawHist = body?.history || body?.messages || body?.conversation;
+  if (Array.isArray(rawHist)) {
+    for (const item of rawHist.slice(-6)) {
+      if (!item) continue;
+      const role = item.role === 'assistant' || item.role === 'model' || item.sender === 'ai' ? 'model' : 'user';
+      const text = item.text || item.content || item.message || '';
+      if (text && typeof text === 'string') {
+        contents.push({ role, parts: [{ text }] });
+      }
+    }
+  }
+  return contents;
+}
 
 const VULGAR_STEMS = [
   'شتم', 'شتيمة', 'شتائم', 'قحب', 'شرموط', 'شرموطة', 'عرص', 'خول', 'منيك', 
@@ -239,19 +275,23 @@ app.post('/api/report-issue', (req: Request, res: Response) => {
 });
 
 // Real-time Ultra-Fast Streaming Endpoint (Server-Sent Events)
-app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
+app.post(['/api/el-ai/stream', '/api/hi-qr/stream', '/api/stream'], async (req: Request, res: Response) => {
   try {
-    const { message, image, history } = req.body;
+    const rawPrompt = extractUserPrompt(req.body, req.query);
+    const parsedImg = parseImageData(req.body?.image);
+    const docText = req.body?.documentText ? String(req.body.documentText).trim() : '';
 
-    const rawPrompt = typeof message === 'string' ? message.trim() : '';
-    const parsedImg = parseImageData(image);
-
-    if (!rawPrompt && !parsedImg) {
-      res.status(400).json({ error: 'الرسالة أو الصورة مطلوبة' });
+    if (!rawPrompt && !parsedImg && !docText) {
+      res.status(400).json({ error: 'الرسالة أو الصورة أو المستند مطلوبة' });
       return;
     }
 
-    const userPrompt = rawPrompt || (parsedImg ? 'حلل واشرح محتوى هذه الصورة بدقة وتفصيل واقرأ ما فيها.' : '');
+    let userPrompt = rawPrompt;
+    if (docText) {
+      userPrompt = `[سياق المستند]:\n${docText}\n\n[استفسار المستخدم]:\n${rawPrompt || 'اشرح ولخص هذا المستند'}`;
+    } else if (!userPrompt && parsedImg) {
+      userPrompt = 'حلل واشرح محتوى هذه الصورة بدقة وتفصيل واقرأ ما فيها.';
+    }
 
     // Check for profanity or offensive insults: instant ban
     if (containsProfanity(userPrompt)) {
@@ -270,19 +310,7 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
     res.flushHeaders?.();
 
     if (ai) {
-      const contents: Array<{ role: 'user' | 'model'; parts: Array<any> }> = [];
-
-      if (Array.isArray(history)) {
-        for (const item of history.slice(-4)) {
-          if (item && item.role && item.text) {
-            contents.push({
-              role: item.role === 'user' ? 'user' : 'model',
-              parts: [{ text: item.text }],
-            });
-          }
-        }
-      }
-
+      const contents = extractHistory(req.body);
       const userParts: any[] = [{ text: userPrompt }];
       if (parsedImg) {
         userParts.push({
@@ -292,17 +320,12 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
           },
         });
       }
-
-      contents.push({
-        role: 'user',
-        parts: userParts,
-      });
+      contents.push({ role: 'user', parts: userParts });
 
       let responseStream;
-      const timeoutMs = parsedImg ? 18000 : 12000;
+      const timeoutMs = parsedImg ? 22000 : 16000;
 
       try {
-        // Try gemini-3.1-flash-lite first (fast token arrival, highly available) or fallback to gemini-3.8-flash
         try {
           responseStream = await withTimeout(
             ai.models.generateContentStream({
@@ -310,22 +333,22 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
               contents,
               config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
-                temperature: 0.2,
-                maxOutputTokens: 800,
+                temperature: 0.3,
+                maxOutputTokens: 1000,
               },
             }),
             timeoutMs
           );
-        } catch (liteErr: any) {
-          console.warn('[Flash-lite Stream failed, trying 3.8-flash]:', liteErr?.message);
+        } catch (mErr: any) {
+          console.warn('[3.1-flash-lite stream failed, trying 3.5-flash-lite]:', mErr?.message);
           responseStream = await withTimeout(
             ai.models.generateContentStream({
-              model: 'gemini-3.8-flash',
+              model: 'gemini-3.5-flash-lite',
               contents,
               config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
-                temperature: 0.2,
-                maxOutputTokens: 800,
+                temperature: 0.3,
+                maxOutputTokens: 1000,
               },
             }),
             timeoutMs
@@ -349,7 +372,7 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
           return;
         }
       } catch (streamErr: any) {
-        console.warn('AI Stream error or unavailable, using universal answer engine:', streamErr?.message);
+        console.warn('AI Stream error, using universal answer engine:', streamErr?.message);
         const smartReply = getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
         res.write(`data: ${JSON.stringify({ text: smartReply })}\n\n`);
         res.write(`data: [DONE]\n\n`);
@@ -366,7 +389,7 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('Stream error:', err);
     try {
-      const fallback = getUniversalAIAnswer(req.body?.message || '', OWNER_EMAIL, Boolean(req.body?.image));
+      const fallback = getUniversalAIAnswer(extractUserPrompt(req.body, req.query), OWNER_EMAIL, Boolean(req.body?.image));
       res.write(`data: ${JSON.stringify({ text: fallback })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
@@ -376,26 +399,31 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
   }
 });
 
-// Assistant Chat Endpoint (Fast direct reply)
-app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
+// Shared Core Chat Handler for all endpoints (POST & GET)
+async function handleUniversalChat(req: Request, res: Response) {
   try {
-    const { message, image, history } = req.body;
+    const rawPrompt = extractUserPrompt(req.body, req.query);
+    const parsedImg = parseImageData(req.body?.image);
+    const docText = req.body?.documentText ? String(req.body.documentText).trim() : '';
 
-    const rawPrompt = typeof message === 'string' ? message.trim() : '';
-    const parsedImg = parseImageData(image);
-
-    if (!rawPrompt && !parsedImg) {
-      res.status(400).json({ error: 'الرسالة أو الصورة مطلوبة' });
+    if (!rawPrompt && !parsedImg && !docText) {
+      res.status(400).json({ error: 'الرسالة أو السؤال مطلوب', reply: 'يرجى كتابة سؤالك' });
       return;
     }
 
-    const userPrompt = rawPrompt || (parsedImg ? 'حلل واشرح محتوى هذه الصورة بدقة وتفصيل واقرأ ما فيها.' : '');
+    let userPrompt = rawPrompt;
+    if (docText) {
+      userPrompt = `[سياق المستند]:\n${docText}\n\n[استفسار المستخدم]:\n${rawPrompt || 'اشرح ولخص هذا المستند'}`;
+    } else if (!userPrompt && parsedImg) {
+      userPrompt = 'حلل واشرح محتوى هذه الصورة بدقة وتفصيل واقرأ ما فيها.';
+    }
 
-    // Check for profanity or offensive insults: instant ban
+    // Check for profanity
     if (containsProfanity(userPrompt)) {
       res.status(403).json({
         banned: true,
         error: 'تم حظرك من استخدام المساعد الذكي لاستخدام ألفاظ غير لائقة أو مسيئة. يمكنك تقديم طعن للمراجعة.',
+        reply: 'تم حظرك لاستخدام ألفاظ مسيئة.',
         ownerEmail: OWNER_EMAIL,
       });
       return;
@@ -403,20 +431,7 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
 
     // If Gemini API is configured
     if (ai) {
-      const contents: Array<{ role: 'user' | 'model'; parts: Array<any> }> = [];
-
-      // Add conversation history if present
-      if (Array.isArray(history)) {
-        for (const item of history.slice(-4)) {
-          if (item && item.role && item.text) {
-            contents.push({
-              role: item.role === 'user' ? 'user' : 'model',
-              parts: [{ text: item.text }],
-            });
-          }
-        }
-      }
-
+      const contents = extractHistory(req.body);
       const userParts: any[] = [{ text: userPrompt }];
       if (parsedImg) {
         userParts.push({
@@ -426,14 +441,10 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
           },
         });
       }
-
-      contents.push({
-        role: 'user',
-        parts: userParts,
-      });
+      contents.push({ role: 'user', parts: userParts });
 
       let replyText = '';
-      const timeoutMs = parsedImg ? 18000 : 12000;
+      const timeoutMs = parsedImg ? 22000 : 16000;
 
       try {
         let response;
@@ -444,22 +455,22 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
               contents,
               config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
-                temperature: 0.2,
-                maxOutputTokens: 800,
+                temperature: 0.3,
+                maxOutputTokens: 1000,
               },
             }),
             timeoutMs
           );
-        } catch (liteErr: any) {
-          console.warn('[Flash-lite Generate failed, trying 3.8-flash]:', liteErr?.message);
+        } catch (mErr: any) {
+          console.warn('[3.1-flash-lite generate failed, trying 3.5-flash-lite]:', mErr?.message);
           response = await withTimeout(
             ai.models.generateContent({
-              model: 'gemini-3.8-flash',
+              model: 'gemini-3.5-flash-lite',
               contents,
               config: {
                 systemInstruction: SYSTEM_INSTRUCTION,
-                temperature: 0.2,
-                maxOutputTokens: 800,
+                temperature: 0.3,
+                maxOutputTokens: 1000,
               },
             }),
             timeoutMs
@@ -474,20 +485,48 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
       }
 
       if (replyText) {
-        res.json({ reply: replyText });
+        res.json({
+          reply: replyText,
+          text: replyText,
+          response: replyText,
+          message: replyText,
+          success: true,
+        });
         return;
       }
     }
 
     // Graceful fallback if offline
     const fallbackReply = getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
-    res.json({ reply: fallbackReply });
+    res.json({
+      reply: fallbackReply,
+      text: fallbackReply,
+      response: fallbackReply,
+      message: fallbackReply,
+      success: true,
+    });
   } catch (err: any) {
     console.error('Chat error:', err);
-    const fallback = getUniversalAIAnswer(req.body?.message || '', OWNER_EMAIL, Boolean(req.body?.image));
-    res.json({ reply: fallback });
+    const fallback = getUniversalAIAnswer(extractUserPrompt(req.body, req.query), OWNER_EMAIL, Boolean(req.body?.image));
+    res.json({
+      reply: fallback,
+      text: fallback,
+      response: fallback,
+      message: fallback,
+      success: true,
+    });
   }
-});
+}
+
+// Register Chat Endpoints and Aliases (for both local and external client programs)
+app.post('/api/el-ai/chat', handleUniversalChat);
+app.post('/api/hi-qr/chat', handleUniversalChat);
+app.post('/api/chat', handleUniversalChat);
+app.post('/api/ai/chat', handleUniversalChat);
+app.post('/api/ai', handleUniversalChat);
+app.post('/api/v1/chat', handleUniversalChat);
+app.get('/api/chat', handleUniversalChat);
+app.get('/api/el-ai/chat', handleUniversalChat);
 
 function generateSmartResponse(prompt: string): string {
   return getUniversalAIAnswer(prompt, OWNER_EMAIL);
@@ -523,247 +562,16 @@ const HI_QR_SYSTEM_INSTRUCTION = `أنت "HI qr" - منصة الذكاء الا�
 - نسق إجاباتك باستخدام عناوين واضحة ونقاط وأكواد برمجية منسقة داخل بلوكات Markdown مع ذكر اسم اللغة.
 - إذا وجه إليك سؤال حول هويتك: عرّف نفسك بأنك "HI qr" - منصة الذكاء الاصطناعي الشاملة والمتطورة.`;
 
-// 1. HI qr Streaming Endpoint (SSE)
-app.post('/api/hi-qr/stream', async (req: Request, res: Response) => {
-  const reqStart = Date.now();
-  try {
-    const { message, modelId, image, documentText, searchGrounding, history } = req.body;
-
-    const rawMessage = typeof message === 'string' ? message.trim() : '';
-    const parsedImg = parseImageData(image);
-
-    if (!rawMessage && !parsedImg && !documentText) {
-      res.status(400).json({ error: 'محتوى الرسالة أو المستند أو الصورة مطلوب' });
-      return;
-    }
-
-    let combinedPrompt = rawMessage;
-    if (documentText) {
-      combinedPrompt = `[سياق المستند والملف المرفق RAG]:\n${documentText}\n\n[استفسار المستخدم]:\n${rawMessage || 'حلل واشرح محتوى هذا المستند بدقة'}`;
-    }
-
-    if (!combinedPrompt && parsedImg) {
-      combinedPrompt = 'افحص وحلل هذه الصورة المرفقة واشرح ما فيها بدقة وتفصيل.';
-    }
-
-    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders?.();
-
-    // Select primary model based on requested modelId
-    let targetModel = 'gemini-3.1-flash-lite';
-    if (modelId === 'hi-qr-pro' || modelId === 'hi-qr-code') {
-      targetModel = 'gemini-3.8-flash';
-    }
-
-    hiQrStats.totalRequests += 1;
-    hiQrStats.modelUsage[modelId || 'hi-qr-turbo'] = (hiQrStats.modelUsage[modelId || 'hi-qr-turbo'] || 0) + 1;
-
-    if (ai) {
-      const contents: Array<{ role: 'user' | 'model'; parts: Array<any> }> = [];
-
-      if (Array.isArray(history)) {
-        for (const item of history.slice(-6)) {
-          if (item && item.role && item.text) {
-            contents.push({
-              role: item.role === 'user' ? 'user' : 'model',
-              parts: [{ text: item.text }],
-            });
-          }
-        }
-      }
-
-      const userParts: any[] = [{ text: combinedPrompt }];
-      if (parsedImg) {
-        userParts.push({
-          inlineData: {
-            mimeType: parsedImg.mimeType,
-            data: parsedImg.data,
-          },
-        });
-      }
-
-      contents.push({
-        role: 'user',
-        parts: userParts,
-      });
-
-      const timeoutMs = parsedImg || documentText ? 20000 : 14000;
-      let responseStream;
-
-      try {
-        // Try requested model
-        try {
-          responseStream = await withTimeout(
-            ai.models.generateContentStream({
-              model: targetModel,
-              contents,
-              config: {
-                systemInstruction: HI_QR_SYSTEM_INSTRUCTION,
-                temperature: 0.3,
-                maxOutputTokens: 1200,
-              },
-            }),
-            timeoutMs
-          );
-        } catch (mErr: any) {
-          console.warn(`[HI qr ${targetModel} stream failed, falling back to gemini-3.1-flash-lite]:`, mErr?.message);
-          responseStream = await withTimeout(
-            ai.models.generateContentStream({
-              model: 'gemini-3.1-flash-lite',
-              contents,
-              config: {
-                systemInstruction: HI_QR_SYSTEM_INSTRUCTION,
-                temperature: 0.3,
-                maxOutputTokens: 1200,
-              },
-            }),
-            timeoutMs
-          );
-        }
-
-        let sentAny = false;
-        let totalLen = 0;
-        for await (const chunk of responseStream) {
-          if (chunk.text) {
-            sentAny = true;
-            totalLen += chunk.text.length;
-            res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-            if (typeof (res as any).flush === 'function') {
-              (res as any).flush();
-            }
-          }
-        }
-
-        if (sentAny) {
-          const latency = Date.now() - reqStart;
-          hiQrStats.latencySum += latency;
-          hiQrStats.totalTokens += Math.round(totalLen / 3);
-          res.write(`data: [DONE]\n\n`);
-          res.end();
-          return;
-        }
-      } catch (streamErr: any) {
-        console.warn('HI qr Stream failed, using intelligent fallback:', streamErr?.message);
-      }
-    }
-
-    // High intelligence universal fallback
-    const fallback = getUniversalAIAnswer(combinedPrompt, OWNER_EMAIL, Boolean(parsedImg));
-    res.write(`data: ${JSON.stringify({ text: fallback })}\n\n`);
-    res.write(`data: [DONE]\n\n`);
-    res.end();
-  } catch (err: any) {
-    console.error('HI qr stream error:', err);
-    res.end();
-  }
-});
-
-// 2. HI qr Chat Endpoint (REST)
-app.post('/api/hi-qr/chat', async (req: Request, res: Response) => {
-  const reqStart = Date.now();
-  try {
-    const { message, modelId, image, documentText, history } = req.body;
-
-    const rawMessage = typeof message === 'string' ? message.trim() : '';
-    const parsedImg = parseImageData(image);
-
-    let combinedPrompt = rawMessage;
-    if (documentText) {
-      combinedPrompt = `[سياق المستند والملف المرفق RAG]:\n${documentText}\n\n[استفسار المستخدم]:\n${rawMessage || 'حلل واشرح محتوى هذا المستند'}`;
-    }
-
-    if (!combinedPrompt && parsedImg) {
-      combinedPrompt = 'افحص وحلل هذه الصورة واشرح ما فيها بدقة.';
-    }
-
-    let targetModel = 'gemini-3.1-flash-lite';
-    if (modelId === 'hi-qr-pro' || modelId === 'hi-qr-code') {
-      targetModel = 'gemini-3.8-flash';
-    }
-
-    hiQrStats.totalRequests += 1;
-
-    if (ai) {
-      const contents: Array<{ role: 'user' | 'model'; parts: Array<any> }> = [];
-      if (Array.isArray(history)) {
-        for (const item of history.slice(-6)) {
-          if (item?.role && item?.text) {
-            contents.push({
-              role: item.role === 'user' ? 'user' : 'model',
-              parts: [{ text: item.text }],
-            });
-          }
-        }
-      }
-
-      const userParts: any[] = [{ text: combinedPrompt }];
-      if (parsedImg) {
-        userParts.push({
-          inlineData: {
-            mimeType: parsedImg.mimeType,
-            data: parsedImg.data,
-          },
-        });
-      }
-
-      contents.push({ role: 'user', parts: userParts });
-
-      const timeoutMs = parsedImg || documentText ? 20000 : 14000;
-      let replyText = '';
-
-      try {
-        try {
-          const resp = await withTimeout(
-            ai.models.generateContent({
-              model: targetModel,
-              contents,
-              config: {
-                systemInstruction: HI_QR_SYSTEM_INSTRUCTION,
-                temperature: 0.3,
-                maxOutputTokens: 1200,
-              },
-            }),
-            timeoutMs
-          );
-          if (resp?.text) replyText = resp.text;
-        } catch {
-          const resp2 = await withTimeout(
-            ai.models.generateContent({
-              model: 'gemini-3.1-flash-lite',
-              contents,
-              config: {
-                systemInstruction: HI_QR_SYSTEM_INSTRUCTION,
-                temperature: 0.3,
-                maxOutputTokens: 1200,
-              },
-            }),
-            timeoutMs
-          );
-          if (resp2?.text) replyText = resp2.text;
-        }
-      } catch (err: any) {
-        console.warn('HI qr generateContent error:', err?.message);
-      }
-
-      if (replyText) {
-        const latencyMs = Date.now() - reqStart;
-        const tokensEstimated = Math.round(replyText.length / 3);
-        hiQrStats.latencySum += latencyMs;
-        hiQrStats.totalTokens += tokensEstimated;
-        res.json({ reply: replyText, latencyMs, tokensEstimated });
-        return;
-      }
-    }
-
-    const fallback = getUniversalAIAnswer(combinedPrompt, OWNER_EMAIL, Boolean(parsedImg));
-    const latencyMs = Date.now() - reqStart;
-    res.json({ reply: fallback, latencyMs, tokensEstimated: Math.round(fallback.length / 3) });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
+// HI qr stats endpoint
+app.get('/api/hi-qr/stats', (_req: Request, res: Response) => {
+  const uptimeHours = ((Date.now() - hiQrStats.startTime) / (1000 * 60 * 60)).toFixed(1);
+  const avgLatency = hiQrStats.totalRequests > 0 ? Math.round(hiQrStats.latencySum / hiQrStats.totalRequests) : 180;
+  res.json({
+    ...hiQrStats,
+    uptimeHours: `${uptimeHours} hours`,
+    avgLatencyMs: avgLatency,
+    activeModels: ['HIQr-Flash', 'HIQr-Fast', 'HIQr-Vision', 'HIQr-Pro'],
+  });
 });
 
 // 3. HI qr Code Sandbox Execution Endpoint
