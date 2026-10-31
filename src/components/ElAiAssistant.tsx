@@ -12,13 +12,15 @@ import {
   FileText,
   KeyRound,
   Unlock,
+  Image as ImageIcon,
 } from 'lucide-react';
-import { getSmartIslamicAnswer } from '../utils/islamicKnowledgeEngine';
+import { getUniversalAIAnswer } from '../utils/aiUniversalEngine';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'model';
   text: string;
+  image?: string;
   timestamp: number;
 }
 
@@ -28,7 +30,50 @@ interface ElAiAssistantProps {
 
 const OWNER_EMAIL = 'frassa0000@gmail.com';
 
-const PROFANITY_REGEX = /(?:شتم|شتيمة|سب|قحب|شرموط|عرص|خول|منيك|قذر|وسخ|كلب|حمار|متخلف|ابن الكلب|يلعن|لعنة|كس|طيز|زب|فاحش|منحط|زبالة|حيوان|سافل|واطي|حقير|ابن العاهرة|عاهرة|عاهر|علق|منيوك|سكس|نيك|طياز|شرمطة|fuck|shit|bitch|bastard|asshole|cunt|dick|pussy|whore|slut|motherfucker|fucker|damn)/i;
+const VULGAR_STEMS = [
+  'شتم', 'شتيمة', 'شتائم', 'قحب', 'شرموط', 'شرموطة', 'عرص', 'خول', 'منيك', 
+  'متخلف', 'يلعن', 'لعنة', 'طيز', 'زب', 'فاحش', 'منحط', 
+  'سافل', 'واطي', 'حقير', 'عاهرة', 'عاهر', 'علق', 'منيوك', 
+  'سكس', 'نيك', 'طياز', 'شرمطة', 'fuck', 'shit', 'bitch', 'bastard', 
+  'asshole', 'cunt', 'dick', 'pussy', 'whore', 'slut', 'motherfucker'
+];
+
+function checkIsProfane(text: string): boolean {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  if (lower.includes('ابن الكلب') || lower.includes('ابن العاهرة') || lower.includes('يلعن دينك')) {
+    return true;
+  }
+  const words = lower.replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+  for (const w of words) {
+    if (VULGAR_STEMS.includes(w)) return true;
+    if (w === 'سب' || w === 'سبك' || w === 'يسب' || w === 'تسب') return true;
+    if (w === 'كس' || w === 'كسك' || w === 'كسها') return true;
+    if (w === 'كلب' || w === 'ياكلب' || w === 'كلاب') return true;
+    if (w === 'حمار' || w === 'ياحمار' || w === 'حمير') return true;
+    if (w === 'وسخ' || w === 'ياوسخ' || w === 'زبالة' || w === 'قذر') return true;
+    for (const v of VULGAR_STEMS) {
+      if (
+        w.includes(v) &&
+        !['احسب', 'حساب', 'سبب', 'اسباب', 'نسبة', 'تسبيح', 'سبحان', 'عكس', 'كسب', 'مناسب'].some((safe) =>
+          w.includes(safe)
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Backward compatibility export to prevent any ReferenceError in cached sessions
+export const PROFANITY_REGEX = {
+  test: (text: string) => checkIsProfane(text),
+};
+
+if (typeof window !== 'undefined') {
+  (window as any).PROFANITY_REGEX = PROFANITY_REGEX;
+}
 
 export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah }) => {
   // Option to show or hide the floating button on screen
@@ -47,6 +92,29 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Image Upload State
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('حجم الصورة كبير جداً، يرجى اختيار صورة أصغر من 10 ميجابايت.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setSelectedImage(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // Direct issue reporting to site owner
   const [isReportingIssue, setIsReportingIssue] = useState<boolean>(false);
@@ -100,7 +168,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       {
         id: 'welcome',
         role: 'model',
-        text: 'أهلاً بك. أنا مساعد ذكي، مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وإيجاز وسرعة.',
+        text: 'أهلاً بك! أنا مساعد ذكاء اصطناعي شامل ومتكامل، مستعد للإجابة عن أي سؤال خارجي أو داخلي في العلوم، التكنولوجيا، الرياضيات، التاريخ، الجغرافيا، اللغات، والدين بدقة وفورية.',
         timestamp: Date.now(),
       },
     ];
@@ -192,10 +260,12 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       return;
     }
 
-    if (!text || isLoading) return;
+    const imageToSend = selectedImage;
+
+    if ((!text && !imageToSend) || isLoading) return;
 
     // Check for abusive or profanity words
-    if (PROFANITY_REGEX.test(text)) {
+    if (text && checkIsProfane(text)) {
       setIsBanned(true);
       try {
         localStorage.setItem('assistant_banned_user', 'true');
@@ -206,6 +276,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         id: `user_${Date.now()}`,
         role: 'user',
         text,
+        image: imageToSend || undefined,
         timestamp: Date.now(),
       };
       const banMsg: ChatMessage = {
@@ -216,19 +287,22 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
       };
       setMessages([...messages, userMsg, banMsg]);
       setInputMessage('');
+      setSelectedImage(null);
       return;
     }
 
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      text,
+      text: text || (imageToSend ? '📷 تحليل صورة مرفقة' : ''),
+      image: imageToSend || undefined,
       timestamp: Date.now(),
     };
 
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInputMessage('');
+    setSelectedImage(null);
     setIsLoading(true);
 
     const aiMsgId = `ai_${Date.now()}`;
@@ -241,6 +315,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
+          image: imageToSend,
           history: newMessages.slice(-6).map((m) => ({ role: m.role, text: m.text })),
         }),
       });
@@ -318,6 +393,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
+          image: imageToSend,
           history: newMessages.slice(-6).map((m) => ({ role: m.role, text: m.text })),
         }),
       });
@@ -343,7 +419,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         return;
       }
 
-      const replyText = data?.reply || getSmartIslamicAnswer(text, OWNER_EMAIL);
+      const replyText = data?.reply || getUniversalAIAnswer(text, OWNER_EMAIL, Boolean(imageToSend));
 
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === aiMsgId);
@@ -361,7 +437,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
         ];
       });
     } catch {
-      const fallbackText = getSmartIslamicAnswer(text, OWNER_EMAIL);
+      const fallbackText = getUniversalAIAnswer(text, OWNER_EMAIL, Boolean(imageToSend));
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === aiMsgId);
         if (exists) {
@@ -542,7 +618,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
     const welcome: ChatMessage = {
       id: 'welcome',
       role: 'model',
-      text: 'أهلاً بك. أنا مساعد ذكي، مستعد للإجابة عن أسئلتك في الدين أو خارجه بدقة وإيجاز وسرعة.',
+      text: 'أهلاً بك! أنا مساعد ذكاء اصطناعي شامل ومتكامل، مستعد للإجابة عن أي سؤال خارجي أو داخلي في العلوم، التكنولوجيا، الرياضيات، التاريخ، الجغرافيا، اللغات، والدين بدقة وفورية.',
       timestamp: Date.now(),
     };
     setMessages([welcome]);
@@ -921,6 +997,16 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                             </button>
                           </div>
                         )}
+                        {msg.image && (
+                          <div className="mb-2 rounded-xl overflow-hidden border border-white/20 bg-black/40 max-w-[220px]">
+                            <img
+                              src={msg.image}
+                              alt="صورة مرفقة"
+                              className="w-full h-auto max-h-48 object-cover rounded-xl"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
                         <p className="whitespace-pre-wrap select-text leading-relaxed font-cairo">
                           {msg.text}
                           {streamingMsgId === msg.id && (
@@ -967,6 +1053,32 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* Selected Image Preview before sending */}
+              {selectedImage && (
+                <div className="px-3 py-1.5 bg-black/80 border-t border-amber-400/30 flex items-center justify-between gap-2 shrink-0 animate-fadeIn">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-amber-400 shrink-0 bg-stone-900 shadow">
+                      <img
+                        src={selectedImage}
+                        alt="معاينة الصورة"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="text-[10px] text-amber-200 font-medium truncate">
+                      <span>صورة جاهزة للتحليل بالذكاء الاصطناعي</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage(null)}
+                    className="p-1 rounded-full bg-stone-800 hover:bg-red-500 text-stone-300 hover:text-white transition-colors"
+                    title="حذف الصورة"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               {/* Input Footer: Normal or Banned */}
               {isBanned ? (
                 <form
@@ -1012,23 +1124,48 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
                     e.preventDefault();
                     handleSendMessage();
                   }}
-                  className="p-2 bg-[#0A1713]/95 border-t border-white/10 flex items-center gap-1 shrink-0"
+                  className="p-2 bg-[#0A1713]/95 border-t border-white/10 flex items-center gap-1.5 shrink-0"
                 >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading}
+                    className={`p-2 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
+                      selectedImage
+                        ? 'bg-amber-400 text-stone-950 border-amber-300 shadow-sm'
+                        : 'bg-black/40 border-white/15 text-slate-300 hover:text-amber-300 hover:border-amber-400/40'
+                    }`}
+                    title="رفع صورة لتحليلها بالذكاء الاصطناعي (مخطوطات، صور، مسائل، نصوص)"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                  </button>
+
                   <div className="relative flex-1">
                     <input
                       ref={inputRef}
                       type="text"
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="اكتب سؤالك في الدين أو خارجه..."
+                      placeholder={
+                        selectedImage
+                          ? 'اكتب سؤالك عن هذه الصورة أو اضغط إرسال...'
+                          : 'اسأل عن أي شيء أو ارفع صورة لتحليلها...'
+                      }
                       className="w-full px-3 py-1.5 rounded-2xl bg-black/40 border border-white/15 focus:border-amber-400 focus:outline-none text-xs text-slate-100 placeholder:text-slate-400 font-cairo pl-8"
                       disabled={isLoading}
                     />
                     <button
                       type="submit"
-                      disabled={!inputMessage.trim() || isLoading}
+                      disabled={(!inputMessage.trim() && !selectedImage) || isLoading}
                       className={`absolute left-1 top-1/2 -translate-y-1/2 p-1.5 rounded-xl transition-all ${
-                        inputMessage.trim() && !isLoading
+                        (inputMessage.trim() || selectedImage) && !isLoading
                           ? 'bg-amber-400 text-stone-950 hover:bg-amber-300 shadow-sm scale-100'
                           : 'text-slate-500 cursor-not-allowed scale-90'
                       }`}

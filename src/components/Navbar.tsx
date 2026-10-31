@@ -82,10 +82,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenSearch}
               className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold ios-glass-pill hover:bg-white/15 text-amber-200 hover:text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-xs border border-amber-400/30"
-              title="بحث في القرآن الكريم"
+              title="بحث"
             >
               <Search className="w-3.5 h-3.5 text-amber-400" />
-              <span>القرآن الكريم</span>
+              <span>بحث</span>
             </button>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getSmartIslamicAnswer } from './src/utils/islamicKnowledgeEngine.ts';
+import { getUniversalAIAnswer } from './src/utils/aiUniversalEngine.ts';
 
 dotenv.config();
 
@@ -14,7 +14,28 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+
+function parseImageData(img: any): { mimeType: string; data: string } | null {
+  if (!img) return null;
+  if (typeof img === 'object' && img.mimeType && img.data) {
+    return {
+      mimeType: String(img.mimeType),
+      data: String(img.data).replace(/^data:[^;]+;base64,/, ''),
+    };
+  }
+  if (typeof img === 'string') {
+    const match = img.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      return { mimeType: match[1], data: match[2] };
+    }
+    if (img.length > 50) {
+      return { mimeType: 'image/jpeg', data: img };
+    }
+  }
+  return null;
+}
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
@@ -40,20 +61,66 @@ const ai = apiKey
 
 const OWNER_EMAIL = 'frassa0000@gmail.com';
 
-const SYSTEM_INSTRUCTION = `أنت المساعد الذكي (اسمك البرمجي: ™✓).
-القواعد الصارمة للرد:
-1. السرعة الفائقة والرد الفوري: أجب على الفور على قد السؤال باختصار وتركيز ودقة دون أي مقدمات أو ترحيب مكرر أو حشو. ابدأ في الإجابة مباشرة من أول كلمة.
-2. الشمول: أجب عن أي سؤال في الدين (القرآن، التفسير، الحديث، الفقه، السيرة النبوية) أو خارج الدين في كافة العلوم والمعارف بدقة ووضوح.
-3. إذا سُئلت عن هويتك أو من أنت، قل باختصار شديد: "أنا مساعد ذكي فقط". ولا تذكر أي نسب مئوية.
-4. إذا واجه المستخدم مشكلة أو عطل، وجهه لإرسالها لصاحب الموقع (${OWNER_EMAIL}) عبر زر الإبلاغ في الشات.`;
+const SYSTEM_INSTRUCTION = `أنت مساعد ذكاء اصطناعي شامل ومتكامل وعالي الكفاءة (اسمك: ™✓).
+مهمتك: الإجابة الدقيقة والفورية والشاملة على أي سؤال خارجي أو داخلي في كافة مجالات المعرفة بدون استثناء:
+1. العلوم العامة، الفيزياء، الكيمياء، الفلك والفضاء، الأحياء، الطب، والتغذية والصحة.
+2. التكنولوجيا، هندسة البرمجيات، لغات البرمجة (Python, JavaScript, TypeScript, C++, etc)، الخوارزميات، الذكاء الاصطناعي، والأمن السيبراني.
+3. الرياضيات، الحساب، النسب المئوية، حل المعادلات والهندسة الرياضية.
+4. التاريخ، الحضارات، الجغرافيا، دول العالم وعواصمها، والأعلام والشخصيات المؤثرة.
+5. علوم اللغة العربية، النحو، الصرف، البلاغة، والأدب، وترجمة اللغات وتطوير الذات.
+6. العلوم الإسلامية، القرآن الكريم وتفسيره، الحديث الشريف، الفقه، السيرة النبوية، والأذكار والأدعية.
+7. أسئلة الحياة اليومية، تنظيم الوقت، وحل المشكلات والاستشارات المعرفية.
+8. تحليل الصور والرؤية الذكية (AI Vision): عند إرفاق صورة من المستخدم، افحص تفاصيلها بدقة واقرأ النصوص المكتوبة أو الآيات أو الخط العربي أو المعادلات أو الرسوم، واشرح محتوى الصورة بوضوح وإيجاز وأجب عن أي سؤال حولها.
+القواعد الذهبية:
+- أجب فوراً وباختصار مفيد ودقة متناهية من أول كلمة، ورتّب الإجابة في نقاط واضحة كلما دعت الحاجة.
+- لا تذكر أي نسب مئوية تخص الذكاء، وإذا سُئلت عن هويتك قل: "أنا مساعد ذكي متكامل وشامل، مستعد للإجابة عن أي سؤال في كافة مجالات العلوم والمعرفة والدين".
+- إذا واجه المستخدم مشكلة أو عطل في الموقع، وجهه لإرسالها لصاحب الموقع (${OWNER_EMAIL}) عبر زر الإبلاغ.`;
 
-// Profanity / Abuse Detection (Arabic & English)
-const PROFANITY_REGEX = /(?:شتم|شتيمة|سب|قحب|شرموط|عرص|خول|منيك|قذر|وسخ|كلب|حمار|متخلف|ابن الكلب|يلعن|لعنة|كس|طيز|زب|فاحش|منحط|زبالة|حيوان|سافل|واطي|حقير|ابن العاهرة|عاهرة|عاهر|علق|منيوك|سكس|نيك|طياز|شرمطة|fuck|shit|bitch|bastard|asshole|cunt|dick|pussy|whore|slut|motherfucker|fucker|damn)/i;
+const VULGAR_STEMS = [
+  'شتم', 'شتيمة', 'شتائم', 'قحب', 'شرموط', 'شرموطة', 'عرص', 'خول', 'منيك', 
+  'متخلف', 'يلعن', 'لعنة', 'طيز', 'زب', 'فاحش', 'منحط', 
+  'سافل', 'واطي', 'حقير', 'عاهرة', 'عاهر', 'علق', 'منيوك', 
+  'سكس', 'نيك', 'طياز', 'شرمطة', 'fuck', 'shit', 'bitch', 'bastard', 
+  'asshole', 'cunt', 'dick', 'pussy', 'whore', 'slut', 'motherfucker'
+];
 
 function containsProfanity(text: string): boolean {
   if (!text) return false;
-  return PROFANITY_REGEX.test(text);
+  const lower = text.toLowerCase();
+
+  // Explicit compound phrases
+  if (lower.includes('ابن الكلب') || lower.includes('ابن العاهرة') || lower.includes('يلعن دينك')) {
+    return true;
+  }
+
+  // Tokenize into words
+  const words = lower.replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+
+  for (const w of words) {
+    if (VULGAR_STEMS.includes(w)) return true;
+
+    // Standalone insulting words (NOT parts of احسب, سبب, تسبيح, نسبة, عكس, كسب, مسح)
+    if (w === 'سب' || w === 'سبك' || w === 'يسب' || w === 'تسب') return true;
+    if (w === 'كس' || w === 'كسك' || w === 'كسها') return true;
+    if (w === 'كلب' || w === 'ياكلب' || w === 'كلاب') return true;
+    if (w === 'حمار' || w === 'ياحمار' || w === 'حمير') return true;
+    if (w === 'وسخ' || w === 'ياوسخ' || w === 'زبالة' || w === 'قذر') return true;
+
+    for (const v of VULGAR_STEMS) {
+      if (
+        w.includes(v) &&
+        !['احسب', 'حساب', 'سبب', 'اسباب', 'نسبة', 'تسبيح', 'سبحان', 'عكس', 'كسب', 'مناسب'].some((safe) =>
+          w.includes(safe)
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
+
+const PROFANITY_REGEX = { test: (text: string) => containsProfanity(text) };
 
 // In-memory reports store
 const reportedIssues: Array<{ id: string; message: string; contact?: string; timestamp: number }> = [];
@@ -173,14 +240,17 @@ app.post('/api/report-issue', (req: Request, res: Response) => {
 // Real-time Ultra-Fast Streaming Endpoint (Server-Sent Events)
 app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
   try {
-    const { message, history } = req.body;
+    const { message, image, history } = req.body;
 
-    if (!message || typeof message !== 'string' || message.trim() === '') {
-      res.status(400).json({ error: 'الرسالة مطلوبة' });
+    const rawPrompt = typeof message === 'string' ? message.trim() : '';
+    const parsedImg = parseImageData(image);
+
+    if (!rawPrompt && !parsedImg) {
+      res.status(400).json({ error: 'الرسالة أو الصورة مطلوبة' });
       return;
     }
 
-    const userPrompt = message.trim();
+    const userPrompt = rawPrompt || (parsedImg ? 'حلل واشرح محتوى هذه الصورة بدقة وتفصيل واقرأ ما فيها.' : '');
 
     // Check for profanity or offensive insults: instant ban
     if (containsProfanity(userPrompt)) {
@@ -199,7 +269,7 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
     res.flushHeaders?.();
 
     if (ai) {
-      const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+      const contents: Array<{ role: 'user' | 'model'; parts: Array<any> }> = [];
 
       if (Array.isArray(history)) {
         for (const item of history.slice(-4)) {
@@ -212,14 +282,24 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
         }
       }
 
+      const userParts: any[] = [{ text: userPrompt }];
+      if (parsedImg) {
+        userParts.push({
+          inlineData: {
+            mimeType: parsedImg.mimeType,
+            data: parsedImg.data,
+          },
+        });
+      }
+
       contents.push({
         role: 'user',
-        parts: [{ text: userPrompt }],
+        parts: userParts,
       });
 
       let responseStream;
       try {
-        // Ultra-fast streaming with a strict 2.5-second timeout
+        // Ultra-fast streaming with 2.5s (text) or 4.5s (image) timeout
         responseStream = await withTimeout(
           ai.models.generateContentStream({
             model: 'gemini-3.8-flash',
@@ -227,10 +307,10 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
             config: {
               systemInstruction: SYSTEM_INSTRUCTION,
               temperature: 0.2,
-              maxOutputTokens: 300,
+              maxOutputTokens: 350,
             },
           }),
-          2500
+          parsedImg ? 4500 : 2500
         );
 
         for await (const chunk of responseStream) {
@@ -246,8 +326,8 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
         res.end();
         return;
       } catch (streamErr: any) {
-        console.warn('AI Stream timeout or unavailable, using smart answer engine:', streamErr?.message);
-        const smartReply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+        console.warn('AI Stream timeout or unavailable, using universal answer engine:', streamErr?.message);
+        const smartReply = getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
         res.write(`data: ${JSON.stringify({ text: smartReply })}\n\n`);
         res.write(`data: [DONE]\n\n`);
         res.end();
@@ -256,14 +336,14 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
     }
 
     // Fallback if offline
-    const fallbackReply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+    const fallbackReply = getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
     res.write(`data: ${JSON.stringify({ text: fallbackReply })}\n\n`);
     res.write(`data: [DONE]\n\n`);
     res.end();
   } catch (err: any) {
     console.error('Stream error:', err);
     try {
-      const fallback = getSmartIslamicAnswer(req.body?.message || '', OWNER_EMAIL);
+      const fallback = getUniversalAIAnswer(req.body?.message || '', OWNER_EMAIL, Boolean(req.body?.image));
       res.write(`data: ${JSON.stringify({ text: fallback })}\n\n`);
       res.write(`data: [DONE]\n\n`);
       res.end();
@@ -276,14 +356,17 @@ app.post('/api/el-ai/stream', async (req: Request, res: Response) => {
 // Assistant Chat Endpoint (Fast direct reply)
 app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
   try {
-    const { message, history } = req.body;
+    const { message, image, history } = req.body;
 
-    if (!message || typeof message !== 'string' || message.trim() === '') {
-      res.status(400).json({ error: 'الرسالة مطلوبة' });
+    const rawPrompt = typeof message === 'string' ? message.trim() : '';
+    const parsedImg = parseImageData(image);
+
+    if (!rawPrompt && !parsedImg) {
+      res.status(400).json({ error: 'الرسالة أو الصورة مطلوبة' });
       return;
     }
 
-    const userPrompt = message.trim();
+    const userPrompt = rawPrompt || (parsedImg ? 'حلل واشرح محتوى هذه الصورة بدقة وتفصيل واقرأ ما فيها.' : '');
 
     // Check for profanity or offensive insults: instant ban
     if (containsProfanity(userPrompt)) {
@@ -297,7 +380,7 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
 
     // If Gemini API is configured
     if (ai) {
-      const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+      const contents: Array<{ role: 'user' | 'model'; parts: Array<any> }> = [];
 
       // Add conversation history if present
       if (Array.isArray(history)) {
@@ -311,9 +394,19 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
         }
       }
 
+      const userParts: any[] = [{ text: userPrompt }];
+      if (parsedImg) {
+        userParts.push({
+          inlineData: {
+            mimeType: parsedImg.mimeType,
+            data: parsedImg.data,
+          },
+        });
+      }
+
       contents.push({
         role: 'user',
-        parts: [{ text: userPrompt }],
+        parts: userParts,
       });
 
       let response;
@@ -325,35 +418,35 @@ app.post('/api/el-ai/chat', async (req: Request, res: Response) => {
             config: {
               systemInstruction: SYSTEM_INSTRUCTION,
               temperature: 0.2,
-              maxOutputTokens: 300,
+              maxOutputTokens: 350,
             },
           }),
-          2500
+          parsedImg ? 4500 : 2500
         );
 
-        const replyText = response?.text || getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+        const replyText = response?.text || getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
         res.json({ reply: replyText });
         return;
       } catch (e: any) {
-        console.warn('AI generateContent timeout or unavailable, using smart answer engine:', e?.message);
-        const reply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+        console.warn('AI generateContent timeout or unavailable, using universal answer engine:', e?.message);
+        const reply = getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
         res.json({ reply });
         return;
       }
     }
 
     // Graceful fallback if offline
-    const fallbackReply = getSmartIslamicAnswer(userPrompt, OWNER_EMAIL);
+    const fallbackReply = getUniversalAIAnswer(userPrompt, OWNER_EMAIL, Boolean(parsedImg));
     res.json({ reply: fallbackReply });
   } catch (err: any) {
     console.error('Chat error:', err);
-    const fallback = getSmartIslamicAnswer(req.body?.message || '', OWNER_EMAIL);
+    const fallback = getUniversalAIAnswer(req.body?.message || '', OWNER_EMAIL, Boolean(req.body?.image));
     res.json({ reply: fallback });
   }
 });
 
 function generateSmartResponse(prompt: string): string {
-  return getSmartIslamicAnswer(prompt, OWNER_EMAIL);
+  return getUniversalAIAnswer(prompt, OWNER_EMAIL);
 }
 
 // Development vs Production serving

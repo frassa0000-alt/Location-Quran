@@ -19,7 +19,6 @@ import {
   PrayerTimesResult,
 } from '../utils/prayerCalculations';
 import { AdhanPlayerBanner } from './AdhanPlayerBanner';
-import { PrayerWeatherCard } from './PrayerWeatherCard';
 import {
   loadAdhanSettings,
   playAdhan,
@@ -209,12 +208,6 @@ export const PrayerTimesSection: React.FC = () => {
         nextPrayerName={currentPrayerTimes.nextPrayer.name}
         nextPrayerTime={currentPrayerTimes.nextPrayer.time12}
         secondsRemaining={currentPrayerTimes.nextPrayer.secondsRemaining}
-      />
-
-      {/* Live Weather & Prayer Context Card */}
-      <PrayerWeatherCard
-        city={selectedCity}
-        nextPrayer={currentPrayerTimes.nextPrayer}
       />
 
       {/* 6 Prayer Times Cards for Active City - Compact, simple, smaller text */}
