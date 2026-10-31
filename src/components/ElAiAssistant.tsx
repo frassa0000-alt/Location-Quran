@@ -155,7 +155,11 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
               text: m.text.replace(/بمعدل ذكاء 100%،?\s*/g, '').replace(/ذكاء 100%/g, ''),
             }))
             // Filter out old repeated fallback messages
-            .filter((m: ChatMessage) => !m.text.includes('﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾'));
+            .filter(
+              (m: ChatMessage) =>
+                !m.text.includes('﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾') &&
+                !m.text.includes('يسعدني تقديم شرح وافٍ ومفصل لأي جانب تريده')
+            );
           if (cleaned.length > 0) {
             return cleaned;
           }

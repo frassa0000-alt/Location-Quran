@@ -344,15 +344,52 @@ export function getUniversalAIAnswer(
     return mathResult;
   }
 
-  // 2. Identity & capabilities queries
-  if (
-    normalized === 'من انت' ||
-    normalized === 'مين انت' ||
+  // 2. Identity & capabilities queries (انت مين، من انت، عرف عن نفسك، ما اسمك، الخ)
+  const isIdentityQuery =
+    (normalized.includes('انت') || normalized.includes('تكون')) &&
+    (normalized.includes('مين') ||
+      normalized.includes('من') ||
+      normalized.includes('ايه') ||
+      normalized.includes('شو') ||
+      normalized.includes('ايش') ||
+      normalized.includes('شنو')) ||
     normalized.includes('عرف نفسك') ||
+    normalized.includes('عرف عن نفسك') ||
+    normalized.includes('من صممك') ||
+    normalized.includes('من برمجك') ||
+    normalized.includes('من صنعك') ||
+    normalized.includes('ما اسمك') ||
+    normalized.includes('شو اسمك') ||
+    normalized.includes('اسمك ايه') ||
     normalized.includes('ما وظيفتك') ||
-    normalized.includes('ماذا تفعل')
-  ) {
-    return 'أنا مساعد ذكاء اصطناعي متكامل وشامل (™✓). أستطيع الإجابة عن أي سؤال في مختلف مجالات المعرفة: العلوم والفيزياء، التكنولوجيا والبرمجة، الرياضيات والحساب، التاريخ والجغرافيا والدول، اللغات والأدب، العلوم الإسلامية والقرآنية، والتنمية وحل المشكلات اليومية بدقة وسرعة.';
+    normalized.includes('ما دورك') ||
+    normalized.includes('ما هي مهامك') ||
+    normalized.includes('ماذا تفعل') ||
+    normalized.includes('ما هي قدراتك') ||
+    normalized.includes('شو بتعرف') ||
+    normalized.includes('ماذا تستطيع');
+
+  if (isIdentityQuery) {
+    return 'أهلاً بك! أنا مساعد الذكاء الاصطناعي الشامل والمتكامل (™✓). صُممت للإجابة الفورية والشاملة عن كافة أسئلتك في مختلف العلوم والمعارف: من الرياضيات والفيزياء والكيمياء والبرمجة والتكنولوجيا، إلى التاريخ والجغرافيا، واللغات، والقرآن الكريم والعلوم الإسلامية، بالإضافة إلى فحص وتحليل أي صورة ترفعها لي وقراءة نصوصها بدقة. تفضل بسؤالك في أي موضوع!';
+  }
+
+  // Greetings check
+  const isGreeting =
+    normalized.includes('سلام عليكم') ||
+    normalized.includes('السلام عليكم') ||
+    normalized === 'مرحبا' ||
+    normalized.startsWith('مرحبا ') ||
+    normalized === 'اهلا' ||
+    normalized === 'اهلا وسهلا' ||
+    normalized.startsWith('اهلا ') ||
+    normalized === 'صباح الخير' ||
+    normalized === 'مساء الخير' ||
+    normalized === 'هاي' ||
+    normalized === 'hello' ||
+    normalized === 'hi';
+
+  if (isGreeting) {
+    return 'وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك. أنا مساعد الذكاء الاصطناعي المتكامل (™✓). تفضل بطرح سؤالك في أي مجال تريده: علوم، تكنولوجيا، رياضيات، تاريخ، لغات، دين، أو ارفع صورة لتحليلها.';
   }
 
   // 3. Website issue complaints

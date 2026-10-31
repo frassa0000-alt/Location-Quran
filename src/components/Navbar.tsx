@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen, Sparkles, Clock, Radio, Search, Compass } from 'lucide-react';
 
-export type ActiveTab = 'catalog' | 'full-quran' | 'reader' | 'adhkar' | 'tasbeeh' | 'prayer' | 'qibla' | 'radio';
+export type ActiveTab = 'hi-qr' | 'catalog' | 'full-quran' | 'reader' | 'adhkar' | 'tasbeeh' | 'prayer' | 'qibla' | 'radio';
 export type AppTheme = 'parchment' | 'emerald' | 'dark';
 
 interface NavbarProps {
@@ -24,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentSurahName,
 }) => {
   const navItems: { id: ActiveTab; label: string; icon: React.ElementType }[] = [
+    { id: 'hi-qr', label: '⚡ HI qr الذكاء الاصطناعي', icon: Sparkles },
     { id: 'catalog', label: 'فهرس السور', icon: BookOpen },
     { id: 'full-quran', label: 'المصحف الشريف', icon: BookOpen },
     { id: 'reader', label: currentSurahName ? `سورة ${currentSurahName}` : 'تلاوة وتفسير', icon: BookOpen },
