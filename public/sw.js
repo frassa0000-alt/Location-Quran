@@ -1,7 +1,7 @@
 // Service Worker for Quran App - Advanced Offline Caching & Notifications
-const CACHE_NAME = 'quran-shell-v2';
-const API_CACHE_NAME = 'quran-api-v2';
-const FONTS_CACHE_NAME = 'quran-fonts-v2';
+const CACHE_NAME = 'quran-shell-v5';
+const API_CACHE_NAME = 'quran-api-v5';
+const FONTS_CACHE_NAME = 'quran-fonts-v5';
 
 const PRECACHE_ASSETS = [
   '/',

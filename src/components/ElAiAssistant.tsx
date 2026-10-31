@@ -214,7 +214,12 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = localStorage.getItem('quran_assistant_history_v4');
+      // Purge any stale legacy caches
+      localStorage.removeItem('quran_assistant_history_v4');
+      localStorage.removeItem('quran_assistant_history_v3');
+      localStorage.removeItem('quran_assistant_history');
+
+      const saved = localStorage.getItem('hi_qr_chat_history_v5');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -223,11 +228,12 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
               ...m,
               text: m.text.replace(/بمعدل ذكاء 100%،?\s*/g, '').replace(/ذكاء 100%/g, ''),
             }))
-            // Filter out old repeated fallback messages
             .filter(
               (m: ChatMessage) =>
                 !m.text.includes('﴿أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ﴾') &&
-                !m.text.includes('يسعدني تقديم شرح وافٍ ومفصل لأي جانب تريده')
+                !m.text.includes('يسعدني تقديم شرح وافٍ') &&
+                !m.text.includes('يسعدني تقديم شرح') &&
+                !m.text.includes('إجابة شاملة حول:')
             );
           if (cleaned.length > 0) {
             return cleaned;
@@ -268,7 +274,7 @@ export const ElAiAssistant: React.FC<ElAiAssistantProps> = ({ onNavigateSurah })
   useEffect(() => {
     try {
       if (messages.length > 1) {
-        localStorage.setItem('quran_assistant_history_v4', JSON.stringify(messages.slice(-8)));
+        localStorage.setItem('hi_qr_chat_history_v5', JSON.stringify(messages.slice(-8)));
       }
     } catch {
       // ignore
