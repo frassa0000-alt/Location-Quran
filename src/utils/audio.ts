@@ -16,6 +16,47 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+export type HapticIntensity = 'light' | 'medium' | 'strong' | 'off';
+
+/**
+ * Acoustic Haptic Sub-Pulse: A dedicated low-frequency impulse (55Hz)
+ * that physically vibrates device speakers/earpieces, creating a realistic tactile sensation
+ * even on platforms without physical vibration motors (desktop, iOS Safari, etc.).
+ */
+export function playHapticSubPulse(intensity: HapticIntensity = 'medium') {
+  if (intensity === 'off') return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    const gainLevels = {
+      light: 0.18,
+      medium: 0.32,
+      strong: 0.5,
+      off: 0,
+    };
+
+    // Sub-bass thump (58Hz down to 36Hz)
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(58, t);
+    osc.frequency.exponentialRampToValueAtTime(36, t + 0.035);
+
+    gain.gain.setValueAtTime(gainLevels[intensity] || 0.32, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.036);
+  } catch {
+    // Graceful fallback
+  }
+}
+
 export function playTasbeehClickSound() {
   try {
     const ctx = getAudioContext();
@@ -96,7 +137,6 @@ export function playPageTurnSound() {
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      // gentle filtered noise decay
       const decay = 1 - i / bufferSize;
       data[i] = (Math.random() * 2 - 1) * decay * 0.15;
     }
@@ -123,6 +163,9 @@ export function playPageTurnSound() {
   }
 }
 
+/**
+ * Standard hardware vibration pattern trigger
+ */
 export function triggerVibration(pattern: number | number[] = 25) {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
@@ -131,4 +174,38 @@ export function triggerVibration(pattern: number | number[] = 25) {
       // Ignore if vibration not permitted
     }
   }
+}
+
+/**
+ * Advanced Multi-Modal Haptic Feedback System:
+ * Combines hardware vibration patterns with acoustic sub-bass haptic simulation
+ * to provide authentic tactile feedback across all devices and browsers.
+ */
+export function triggerTasbeehHaptic(
+  type: 'tap' | 'separator' | 'milestone' = 'tap',
+  intensity: HapticIntensity = 'medium'
+) {
+  if (intensity === 'off') return;
+
+  // 1. Hardware Vibration Motor
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      let pattern: number | number[] = 22;
+
+      if (type === 'tap') {
+        pattern = intensity === 'light' ? 14 : intensity === 'strong' ? 35 : 22;
+      } else if (type === 'separator') {
+        pattern = intensity === 'light' ? [14, 25, 14] : intensity === 'strong' ? [30, 35, 30] : [20, 30, 20];
+      } else if (type === 'milestone') {
+        pattern = intensity === 'light' ? [30, 40, 25, 40, 50] : [45, 50, 40, 50, 75];
+      }
+
+      navigator.vibrate(pattern);
+    } catch {
+      // ignore
+    }
+  }
+
+  // 2. Acoustic Sub-Pulse (Tactile Thump for speakers/headphones)
+  playHapticSubPulse(intensity);
 }

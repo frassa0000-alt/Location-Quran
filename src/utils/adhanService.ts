@@ -10,9 +10,33 @@ export interface AdhanVoice {
 export const ADHAN_VOICES: AdhanVoice[] = [
   {
     id: 'makkah-mulla',
-    name: 'الشيخ علي ملا',
-    location: 'أذان المسجد الحرام بمكة المكرمة',
+    name: 'الشيخ علي أحمد ملا',
+    location: 'أذان المسجد الحرام (مكة المكرمة)',
     url: 'https://cdn.mp3quran.net/audio/adhan/ali-mulla.mp3',
+  },
+  {
+    id: 'madinah-bukhari',
+    name: 'الشيخ عصام بخاري',
+    location: 'أذان المسجد النبوي الشريف (المدينة المنورة)',
+    url: 'https://media.sd.ma/islam/athan/athan4.mp3',
+  },
+  {
+    id: 'aqsa',
+    name: 'أذان المسجد الأقصى المبارك',
+    location: 'القدس الشريف',
+    url: 'https://media.sd.ma/islam/athan/athan1.mp3',
+  },
+  {
+    id: 'cairo-rifat',
+    name: 'الشيخ محمد رفعت',
+    location: 'أذان القاهرة - صوت ماسبيرو الخالد',
+    url: 'https://media.sd.ma/islam/athan/athan2.mp3',
+  },
+  {
+    id: 'abdulbasit-adhan',
+    name: 'الشيخ عبد الباسط عبد الصمد',
+    location: 'الأذان المصري المجود',
+    url: 'https://media.sd.ma/islam/athan/athan3.mp3',
   },
 ];
 
@@ -66,9 +90,18 @@ export function loadAdhanSettings(): AdhanNotificationSettings {
   return DEFAULT_ADHAN_SETTINGS;
 }
 
-export function saveAdhanSettings(settings: AdhanNotificationSettings) {
+export function saveAdhanSettings(settings: Partial<AdhanNotificationSettings>) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    const current = loadAdhanSettings();
+    const updated = {
+      ...current,
+      ...settings,
+      enabledPrayers: {
+        ...current.enabledPrayers,
+        ...(settings.enabledPrayers || {}),
+      },
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch {
     // ignore
   }

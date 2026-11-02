@@ -1,7 +1,7 @@
 // Service Worker for Quran App - Advanced Offline Caching & Notifications
-const CACHE_NAME = 'quran-shell-v5';
-const API_CACHE_NAME = 'quran-api-v5';
-const FONTS_CACHE_NAME = 'quran-fonts-v5';
+const CACHE_NAME = 'quran-shell-v7';
+const API_CACHE_NAME = 'quran-api-v7';
+const FONTS_CACHE_NAME = 'quran-fonts-v7';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -12,23 +12,24 @@ const PRECACHE_ASSETS = [
 
 // 1. Install Event: Pre-cache core app shell
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('Pre-cache partial failure, continuing:', err);
+        console.warn('Pre-cache partial warning:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// 2. Activate Event: Clean up stale caches & claim clients
+// 2. Activate Event: Clean up all legacy stale caches immediately
 self.addEventListener('activate', (event) => {
-  const currentCaches = [CACHE_NAME, API_CACHE_NAME, FONTS_CACHE_NAME];
+  const preservedCaches = [CACHE_NAME, API_CACHE_NAME, FONTS_CACHE_NAME, 'quran-audio-cache-v1'];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (!currentCaches.includes(cacheName)) {
+          if (!preservedCaches.includes(cacheName)) {
             return caches.delete(cacheName);
           }
           return null;
@@ -38,19 +39,30 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event: Intelligent offline strategies
+// 3. Fetch Event
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Only intercept GET requests
   if (request.method !== 'GET') {
     return;
   }
 
   const url = new URL(request.url);
 
+  // Bypass cache completely for dev modules, Vite internals, and source files
+  if (
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/@vite') ||
+    url.pathname.startsWith('/node_modules') ||
+    url.pathname.startsWith('/api/') ||
+    url.searchParams.has('v') ||
+    url.searchParams.has('t')
+  ) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   // Strategy A: Quran Cloud API & Tafsir (Network-First with dynamic offline caching)
-  // Ensures any Surah, Tafsir, or Page the user has opened is preserved offline
   if (url.hostname.includes('alquran.cloud')) {
     event.respondWith(
       fetch(request)
@@ -65,18 +77,15 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cachedMatch = await caches.match(request);
-          if (cachedMatch) {
-            return cachedMatch;
-          }
-          // Return offline JSON fallback if not in cache
+          if (cachedMatch) return cachedMatch;
           return new Response(
             JSON.stringify({
               code: 503,
               status: 'Offline',
-              message: 'المحتوى غير متاح بدون اتصال بالإنترنت'
+              message: 'المحتوى غير متاح بدون اتصال بالإنترنت',
             }),
             {
-              headers: { 'Content-Type': 'application/json; charset=utf-8' }
+              headers: { 'Content-Type': 'application/json; charset=utf-8' },
             }
           );
         })
@@ -88,9 +97,7 @@ self.addEventListener('fetch', (event) => {
   if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+        if (cachedResponse) return cachedResponse;
         return fetch(request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
@@ -103,44 +110,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy C: HTML Navigation requests (Network-First with fallback to /index.html)
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match('/index.html').then((res) => res || caches.match('/'));
-        })
-    );
-    return;
-  }
-
-  // Strategy D: App Static Assets (JS, CSS, SVG, Icons) - Stale-While-Revalidate
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return networkResponse;
-        }).catch(() => cachedResponse);
-
-        return cachedResponse || fetchPromise;
+  // Strategy C: HTML Navigation & App Assets (Network-First, fallback to Cache only when offline)
+  event.respondWith(
+    fetch(request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return networkResponse;
       })
-    );
-    return;
-  }
-
-  // Default Network Fallback
-  event.respondWith(fetch(request));
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        if (request.mode === 'navigate') {
+          return caches.match('/index.html').then((res) => res || caches.match('/'));
+        }
+        return new Response('Network error occurred', { status: 408, headers: { 'Content-Type': 'text/plain' } });
+      })
+  );
 });
 
 // 4. Notification Click Event for Adhan and Prayer Times

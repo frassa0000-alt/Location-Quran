@@ -13,8 +13,9 @@ import {
   Heart,
   Search,
   Copy,
-  Share2,
   CheckCheck,
+  Sliders,
+  Type,
 } from 'lucide-react';
 import { DHIKR_CATEGORIES, ADHKAR_DATA, DhikrItem } from '../data/adhkar';
 import { playTasbeehClickSound, playSuccessChime, triggerVibration } from '../utils/audio';
@@ -25,6 +26,7 @@ export const AdhkarSection: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [fontSizeLevel, setFontSizeLevel] = useState<'normal' | 'large' | 'huge'>('normal');
 
   // Track counts per dhikr id: { [dhikrId]: remainingCount }
   const [counts, setCounts] = useState<Record<string, number>>(() => {
@@ -140,62 +142,99 @@ export const AdhkarSection: React.FC = () => {
     }
   };
 
+  const getTextSizeClass = () => {
+    switch (fontSizeLevel) {
+      case 'huge':
+        return 'text-2xl sm:text-3xl leading-[2.4] sm:leading-[2.6]';
+      case 'large':
+        return 'text-xl sm:text-2xl leading-[2.2] sm:leading-[2.4]';
+      default:
+        return 'text-lg sm:text-xl leading-[2] sm:leading-[2.2]';
+    }
+  };
+
   return (
-    <div className="space-y-5 pb-16">
-      {/* Refined Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c241c] via-[#123126] to-[#0a1814] text-[#EAEFEA] p-5 sm:p-7 border border-[#214336] shadow-lg">
+    <div className="space-y-6 pb-20 select-none font-cairo">
+      {/* ============================================================ */}
+      {/* 1. Header: Clean, Simple, Elegant (بسيط وهادئ جداً) */}
+      {/* ============================================================ */}
+      <div className="rounded-3xl p-5 sm:p-7 bg-gradient-to-br from-[#0c1a14] via-[#0f231b] to-[#091510] border border-amber-400/25 shadow-xl text-slate-100 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-xs uppercase tracking-widest text-amber-300/90 font-medium font-cairo">
-                ألا بذكر الله تطمئن القلوب
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs uppercase tracking-widest text-amber-300/90 font-semibold font-cairo">
+                أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-amiri font-bold text-amber-200">
-              أذكار
+            <h1 className="text-2xl sm:text-3xl font-amiri font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-300 to-amber-200">
+              أذكار المسلم
             </h1>
-            <p className="text-[#A5C0B3] text-xs sm:text-sm mt-1">
-              مجموعات الأذكار المأثورة والأدعية الجامعة مع عداد تفاعلي وتسجيلات صوتية لكبار المشايخ.
+            <p className="text-slate-300 text-xs sm:text-sm mt-0.5 font-cairo">
+              أذكار مأثورة مع عداد تفاعلي بسيط وصوت تسبيح مريح للأعصاب
             </p>
           </div>
 
+          {/* Quick Settings: Sound & Font Size */}
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            {/* Sound toggle */}
+            {/* Font Size Toggle */}
+            <button
+              onClick={() => {
+                if (fontSizeLevel === 'normal') setFontSizeLevel('large');
+                else if (fontSizeLevel === 'large') setFontSizeLevel('huge');
+                else setFontSizeLevel('normal');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-semibold transition-all active:scale-95"
+              title="تغيير حجم الخط"
+            >
+              <Type className="w-3.5 h-3.5 text-amber-400" />
+              <span>
+                {fontSizeLevel === 'normal' ? 'خط عادي' : fontSizeLevel === 'large' ? 'خط كبير' : 'خط كبير جداً'}
+              </span>
+            </button>
+
+            {/* Sound Toggle */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs bg-[#162D24] border border-[#274E40] text-amber-200 hover:bg-[#1E3B30] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-semibold transition-all active:scale-95"
               title="تفعيل أو كتم صوت النقر"
             >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-amber-400" /> : <VolumeX className="w-3.5 h-3.5 text-stone-400" />}
-              <span className="font-cairo">{soundEnabled ? 'صوت النقر' : 'صامت'}</span>
+              {soundEnabled ? (
+                <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+              ) : (
+                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+              )}
+              <span>{soundEnabled ? 'صوت' : 'صامت'}</span>
             </button>
           </div>
         </div>
 
-        {/* Category Progress Bar */}
-        <div className="mt-5 pt-3.5 border-t border-[#1C362F] flex items-center justify-between text-xs text-[#8FA89E]">
+        {/* Minimal Progress Bar */}
+        <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-300">
           <div className="flex items-center gap-2">
-            <span className="font-cairo">إنجاز {activeCategoryTitle}:</span>
-            <span className="font-bold text-amber-200">{completedCount}</span>
-            <span className="text-[#6D877D]">من</span>
-            <span className="font-bold text-stone-300">{categoryItems.length}</span>
+            <span>إنجاز {activeCategoryTitle}:</span>
+            <span className="font-bold text-amber-300 font-mono text-sm">{completedCount}</span>
+            <span className="text-slate-500">/</span>
+            <span className="text-slate-400 font-mono">{categoryItems.length} ذكراً</span>
           </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-28 sm:w-44 h-2 bg-[#101D19] rounded-full overflow-hidden border border-[#1C362F]">
+
+          <div className="flex items-center gap-3">
+            <div className="w-24 sm:w-48 h-2 bg-black/40 rounded-full overflow-hidden border border-white/10">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300 rounded-full"
+                className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-300 transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span className="font-mono tabular-nums font-bold text-amber-300 text-xs">{progressPercent}%</span>
+            <span className="font-mono font-bold text-amber-300 text-xs">{progressPercent}%</span>
           </div>
         </div>
       </div>
 
-      {/* Categories Navigation Bar - Beautiful Pill Style */}
-      <div className="bg-[#0e211a] border border-[#1b3b2f] p-1.5 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 px-0.5">
+      {/* ============================================================ */}
+      {/* 2. Category Selector Pills (تصنيفات واضحة وبسيطة) */}
+      {/* ============================================================ */}
+      <div className="overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-2 min-w-max">
           {DHIKR_CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat.id;
             const catDoneCount = ADHKAR_DATA.filter(
@@ -211,22 +250,22 @@ export const AdhkarSection: React.FC = () => {
                   setSelectedCategory(cat.id);
                   setSearchQuery('');
                 }}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
                   isActive
-                    ? 'bg-gradient-to-r from-emerald-800 to-[#184635] text-amber-200 font-bold shadow-md border border-amber-400/40 ring-1 ring-amber-400/20'
-                    : 'text-[#8FA89E] hover:text-[#EAEFEA] hover:bg-[#142d23] border border-transparent'
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 font-bold shadow-md shadow-amber-950/30 scale-105 border border-white/30'
+                    : 'bg-[#0f1f18]/80 hover:bg-[#152e24] text-slate-300 hover:text-white border border-white/10'
                 }`}
               >
-                <span className="shrink-0">{getCategoryIcon(cat.id)}</span>
-                <span className="font-cairo">{cat.title}</span>
+                <span>{getCategoryIcon(cat.id)}</span>
+                <span>{cat.title}</span>
 
-                {/* Micro badge indicator */}
+                {/* Badge Indicator */}
                 {isAllDone ? (
-                  <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">
+                  <span className="w-4 h-4 rounded-full bg-emerald-500 text-stone-950 font-bold flex items-center justify-center text-[10px]">
                     ✓
                   </span>
                 ) : (
-                  <span className="text-[11px] font-mono tabular-nums opacity-60">
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${isActive ? 'bg-black/20 text-stone-950 font-bold' : 'bg-white/10 text-slate-400'}`}>
                     {catTotal}
                   </span>
                 )}
@@ -236,30 +275,30 @@ export const AdhkarSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Sheikh Audio Recitation Player */}
+      {/* Sheikh Audio Recitation Player (Optional Listener) */}
       <AdhkarAudioPlayer
         selectedCategory={selectedCategory}
         categoryTitle={activeCategoryTitle}
       />
 
-      {/* Search and List Header Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-        {/* Search Input inside current category */}
+      {/* ============================================================ */}
+      {/* 3. Search & Reset Controls Bar */}
+      {/* ============================================================ */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Search Input */}
         <div className="relative flex-1 max-w-md">
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6D877D] pointer-events-none">
-            <Search className="w-4 h-4" />
-          </div>
+          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={`ابحث في ${activeCategoryTitle}...`}
-            className="w-full bg-[#10231b] border border-[#1f4234] rounded-xl py-2 pr-9 pl-4 text-xs sm:text-sm text-[#EAEFEA] placeholder-[#6D877D] focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors text-right"
+            className="w-full pr-10 pl-4 py-2.5 text-xs sm:text-sm rounded-2xl ios-liquid-glass focus:outline-none focus:border-amber-400/70 focus:ring-1 focus:ring-amber-400/40 text-slate-100 placeholder:text-slate-400 transition-all text-right"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8FA89E] hover:text-white px-1.5 py-0.5 rounded hover:bg-[#1A332B]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded-lg hover:bg-white/10"
             >
               مسح
             </button>
@@ -268,30 +307,32 @@ export const AdhkarSection: React.FC = () => {
 
         {/* Counter Stats & Reset Category */}
         <div className="flex items-center justify-between sm:justify-end gap-3">
-          <span className="text-xs text-[#8FA89E] font-cairo">
-            المعروض: <span className="font-bold text-amber-200">{filteredItems.length}</span> ذكر
+          <span className="text-xs text-slate-400 font-cairo">
+            المعروض: <strong className="text-amber-300 font-mono">{filteredItems.length}</strong> ذكر
           </span>
 
           <button
             onClick={handleResetCategory}
-            className="flex items-center gap-1.5 text-xs text-[#8FA89E] hover:text-amber-300 bg-[#12281f] hover:bg-[#183529] px-3 py-1.5 rounded-xl border border-[#214336] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-amber-300 bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-2xl border border-white/10 transition-all cursor-pointer active:scale-95"
             title="إعادة تصفير العداد لهذه المجموعة"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="font-cairo">تصفير العداد</span>
+            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+            <span>تصفير العداد</span>
           </button>
         </div>
       </div>
 
-      {/* Dhikr Cards List */}
+      {/* ============================================================ */}
+      {/* 4. Beautiful & Very Simple Dhikr Cards (بطاقات الأذكار الجديدة) */}
+      {/* ============================================================ */}
       {filteredItems.length === 0 ? (
-        <div className="text-center py-12 px-4 bg-[#10231b]/60 border border-[#1c3c2f] rounded-2xl">
+        <div className="text-center py-16 px-4 ios-liquid-glass rounded-3xl space-y-2">
           <Sparkles className="w-8 h-8 text-amber-300/60 mx-auto mb-2" />
-          <p className="text-sm text-stone-300 font-medium">لم يتم العثور على أذكار مطابقة</p>
-          <p className="text-xs text-[#6D877D] mt-1">جرب البحث بكلمة أخرى أو اختر تبويباً آخر</p>
+          <p className="text-base text-slate-200 font-bold">لم يتم العثور على أذكار مطابقة</p>
+          <p className="text-xs text-slate-400">جرب البحث بكلمة أخرى أو اختر تبويباً آخر</p>
         </div>
       ) : (
-        <div className="space-y-3.5">
+        <div className="space-y-4">
           {filteredItems.map((item, index) => {
             const remaining = counts[item.id] ?? item.count;
             const isDone = remaining === 0;
@@ -301,105 +342,112 @@ export const AdhkarSection: React.FC = () => {
               <div
                 key={item.id}
                 onClick={() => handleIncrement(item)}
-                className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 cursor-pointer select-none text-right ${
+                className={`group relative overflow-hidden rounded-3xl p-5 sm:p-6 transition-all duration-300 cursor-pointer select-none text-right border ${
                   isDone
-                    ? 'bg-[#10281f]/90 border-emerald-500/50 shadow-md ring-1 ring-emerald-500/20'
-                    : 'bg-[#12251e] hover:bg-[#152e25] border-[#214336] hover:border-amber-500/50 shadow-sm hover:shadow-md'
+                    ? 'bg-gradient-to-br from-[#0c2016]/90 via-[#0e271b] to-[#071710] border-emerald-500/50 shadow-md ring-1 ring-emerald-400/20'
+                    : 'bg-[#0b1612]/80 hover:bg-[#0f1f19] border-white/10 hover:border-amber-400/50 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
                 }`}
               >
-                {/* Visual completion progress bar along bottom of card */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0a1813]">
+                {/* Thin Completion Progress Rim along top of card */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-black/40">
                   <div
-                    className={`h-full transition-all duration-200 ${
-                      isDone ? 'bg-emerald-500' : 'bg-gradient-to-r from-amber-500 to-amber-300'
+                    className={`h-full transition-all duration-300 ${
+                      isDone ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-amber-300'
                     }`}
                     style={{ width: `${progress}%` }}
                   />
                 </div>
 
-                <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-4">
-                  {/* Right side: Dhikr index badge & Dhikr Arabic Content */}
-                  <div className="flex-1 space-y-3">
-                    {/* Header line of card: index number & source badge */}
-                    <div className="flex items-center justify-between gap-2 border-b border-[#1b3a2e]/60 pb-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-5">
+                  
+                  {/* Right: Content Body */}
+                  <div className="flex-1 space-y-3.5">
+                    {/* Header line of card: index number, source badge, copy & reset */}
+                    <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-lg bg-[#193a2e] text-amber-300 text-xs font-mono font-bold flex items-center justify-center border border-[#265342]">
+                        <span className="w-7 h-7 rounded-xl bg-white/10 text-amber-300 text-xs font-mono font-bold flex items-center justify-center border border-white/10 shadow-xs">
                           {index + 1}
                         </span>
                         {item.source && (
-                          <span className="text-[11px] font-cairo bg-[#162f25] text-amber-300/80 px-2 py-0.5 rounded-md border border-[#24493a]">
+                          <span className="text-xs font-cairo bg-white/5 text-amber-300/90 px-2.5 py-0.5 rounded-lg border border-white/10">
                             {item.source}
                           </span>
                         )}
                       </div>
 
-                      {/* Quick Action Buttons: Copy / Reset */}
+                      {/* Quick Action Buttons */}
                       <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => handleCopyText(item, e)}
-                          className="p-1.5 text-[#7ea092] hover:text-amber-300 hover:bg-[#1a382d] rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-amber-300 hover:bg-white/10 rounded-xl transition-colors"
                           title="نسخ الذكر"
                         >
                           {copiedId === item.id ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <CheckCheck className="w-4 h-4 text-emerald-400" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy className="w-4 h-4" />
                           )}
                         </button>
                         <button
                           onClick={(e) => handleResetItem(item, e)}
-                          className="p-1.5 text-[#7ea092] hover:text-amber-300 hover:bg-[#1a382d] rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-amber-300 hover:bg-white/10 rounded-xl transition-colors"
                           title="إعادة ضبط هذا الذكر"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" />
+                          <RotateCcw className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
 
-                    {/* Dhikr Arabic Text */}
-                    <p className="font-amiri text-lg sm:text-xl text-[#F4F7F4] leading-[2] sm:leading-[2.2] font-semibold tracking-wide">
+                    {/* Dhikr Arabic Sacred Text */}
+                    <p className={`font-amiri font-bold text-slate-100 group-hover:text-amber-100 transition-colors tracking-wide ${getTextSizeClass()}`}>
                       {item.text}
                     </p>
 
                     {/* Fadl / Virtue Box */}
                     {item.fadl && (
-                      <div className="bg-[#0d1d17]/80 rounded-xl p-2.5 border border-[#1b3a2e] text-xs font-cairo text-[#A5C0B3]">
-                        <span className="font-bold text-amber-300/90 ml-1">فضل الذكر:</span>
+                      <div className="bg-black/30 rounded-2xl p-3 border border-white/5 text-xs font-cairo text-slate-300 leading-relaxed">
+                        <strong className="text-amber-300 ml-1">فضل الذكر:</strong>
                         <span>{item.fadl}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Left side: Interactive Counter Button */}
-                  <div className="flex sm:flex-col items-center justify-between sm:justify-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#1a382d]">
-                    <div
-                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex flex-col items-center justify-center font-bold transition-all transform active:scale-90 shadow-md ${
+                  {/* Left: Large, Delightful Circular Counter Button (زر العداد البارز) */}
+                  <div className="flex sm:flex-col items-center justify-between sm:justify-center gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleIncrement(item);
+                      }}
+                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex flex-col items-center justify-center font-bold transition-all transform active:scale-90 shadow-xl ${
                         isDone
-                          ? 'bg-emerald-500 text-stone-950 shadow-emerald-950/40'
-                          : 'bg-gradient-to-b from-[#1b3a2e] to-[#142e24] text-amber-300 border border-[#2b5947] hover:border-amber-400/60 shadow-black/20'
+                          ? 'bg-gradient-to-br from-emerald-400 to-emerald-500 text-stone-950 shadow-emerald-950/50 scale-105 border-2 border-white/40'
+                          : 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-400 text-stone-950 shadow-amber-950/40 border-2 border-white/40'
                       }`}
                     >
                       {isDone ? (
                         <>
-                          <Check className="w-6 h-6 stroke-[3]" />
-                          <span className="text-[10px] font-cairo font-bold mt-0.5">تم بحمد الله</span>
+                          <Check className="w-7 h-7 stroke-[3]" />
+                          <span className="text-[10px] font-bold mt-0.5 leading-none">مكتمل</span>
                         </>
                       ) : (
                         <>
-                          <span className="text-xl sm:text-2xl font-mono tabular-nums leading-none font-bold">
+                          <span className="text-2xl sm:text-3xl font-mono tabular-nums leading-none font-black">
                             {remaining}
                           </span>
-                          <span className="text-[10px] font-cairo text-[#8FA89E] mt-1">
+                          <span className="text-[10px] font-bold opacity-80 mt-1 leading-none">
                             من {item.count}
                           </span>
                         </>
                       )}
-                    </div>
+                    </button>
 
-                    <span className="text-[11px] text-[#7ea092] font-cairo hidden sm:block">
-                      {isDone ? 'مكتمل' : 'اضغط للعد'}
+                    <span className="text-[11px] font-bold text-slate-400 hidden sm:block">
+                      {isDone ? 'تم بحمد الله' : 'انقر للعد'}
                     </span>
                   </div>
+
                 </div>
               </div>
             );

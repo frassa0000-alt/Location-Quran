@@ -18,9 +18,11 @@ import { AppSettings } from './components/SettingsModal';
 import { Footer } from './components/Footer';
 import { QuranSplashIntro } from './components/QuranSplashIntro';
 import { SpiritualWaveCanvas } from './components/SpiritualWaveCanvas';
-import { ElAiAssistant } from './components/ElAiAssistant';
+import { KhatmahModal } from './components/KhatmahModal';
+import { BookmarksModal } from './components/BookmarksModal';
+import { checkAndTriggerReminder } from './services/quranFeaturesService';
 import { SURAHS_LIST } from './data/surahs';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, BookOpen } from 'lucide-react';
 
 interface Bookmark {
   surahNumber: number;
@@ -34,8 +36,19 @@ export default function App() {
   const [currentSurahNumber, setCurrentSurahNumber] = useState<number>(1);
   const [targetAyahNumber, setTargetAyahNumber] = useState<number>(1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isKhatmahOpen, setIsKhatmahOpen] = useState(false);
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
+
+  // Daily Reading Reminder background checker
+  useEffect(() => {
+    checkAndTriggerReminder();
+    const interval = setInterval(() => {
+      checkAndTriggerReminder();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Network online / offline status listener
   useEffect(() => {
@@ -256,6 +269,8 @@ export default function App() {
         fontFamily={settings.fontFamily}
         setFontFamily={(f) => handleUpdateSettings({ fontFamily: f })}
         onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenKhatmah={() => setIsKhatmahOpen(true)}
+        onOpenBookmarks={() => setIsBookmarksOpen(true)}
         currentSurahName={currentSurahMeta?.name}
       />
 
@@ -268,7 +283,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {activeTab === 'catalog' && (
           <SurahCatalog
             onSelectSurah={handleSelectSurah}
@@ -277,6 +292,8 @@ export default function App() {
               setActiveTab('full-quran');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onOpenKhatmah={() => setIsKhatmahOpen(true)}
+            onOpenBookmarks={() => setIsBookmarksOpen(true)}
             lastReadBookmark={bookmark}
           />
         )}
@@ -324,8 +341,26 @@ export default function App() {
         {activeTab === 'radio' && <QuranRadioSection />}
       </main>
 
-      {/* Floating Suspended Chat ("شات متعلق في الهوا") */}
-      <ElAiAssistant onNavigateSurah={handleSelectSurah} />
+      {/* Khatmah Tracker & Reading Statistics Modal */}
+      <KhatmahModal
+        isOpen={isKhatmahOpen}
+        onClose={() => setIsKhatmahOpen(false)}
+        onNavigateSurahPage={() => {
+          setIsKhatmahOpen(false);
+          setActiveTab('full-quran');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+
+      {/* Multi-Bookmarks & Last Read Modal */}
+      <BookmarksModal
+        isOpen={isBookmarksOpen}
+        onClose={() => setIsBookmarksOpen(false)}
+        onSelectBookmark={(surahNum, ayahNum) => {
+          setIsBookmarksOpen(false);
+          handleSelectSurah(surahNum, ayahNum);
+        }}
+      />
 
       {/* Global Advanced Search Dialog */}
       <GlobalSearchModal

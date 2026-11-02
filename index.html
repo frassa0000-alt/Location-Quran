@@ -21,7 +21,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet" />
   </head>
-  <body class="bg-[#0A0E13] text-[#F1F5F9] font-sans antialiased selection:bg-amber-600 selection:text-white" style="background-color: #0A0E13; min-height: 100vh; margin: 0;">
+    <script>
+      // Self-heal stale caches from prior versions to ensure latest UI loads
+      try {
+        if ('serviceWorker' in navigator) {
+          var PURGE_TAG = 'el_quran_cache_purge_v7';
+          if (localStorage.getItem(PURGE_TAG) !== '1') {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              for (var i = 0; i < regs.length; i++) {
+                regs[i].unregister();
+              }
+            });
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                for (var j = 0; j < names.length; j++) {
+                  if (names[j] !== 'quran-audio-cache-v1') {
+                    caches.delete(names[j]);
+                  }
+                }
+              });
+            }
+            localStorage.setItem(PURGE_TAG, '1');
+          }
+        }
+      } catch (e) {
+        console.warn('Cache purge info:', e);
+      }
+    </script>
     <div id="root" style="min-height: 100vh; background-color: #0A0E13;"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -90,14 +90,16 @@ export const RECITERS: Reciter[] = [
   }
 ];
 
-export function getSurahAudioUrl(reciter: Reciter, surahNumber: number): string {
+export function getSurahAudioUrl(reciter: Reciter | string, surahNumber: number): string {
+  const rec = typeof reciter === 'string' ? RECITERS.find((r) => r.id === reciter) || RECITERS[0] : reciter;
   const padded = String(surahNumber).padStart(3, '0');
-  return `${reciter.serverUrl}/${padded}.mp3`;
+  return `${rec.serverUrl}/${padded}.mp3`;
 }
 
-export function getAyahAudioUrl(reciter: Reciter, surahNumber: number, ayahNumber: number): string {
+export function getAyahAudioUrl(reciter: Reciter | string, surahNumber: number, ayahNumber: number): string {
+  const rec = typeof reciter === 'string' ? RECITERS.find((r) => r.id === reciter) || RECITERS[0] : reciter;
   const paddedSurah = String(surahNumber).padStart(3, '0');
   const paddedAyah = String(ayahNumber).padStart(3, '0');
-  const folder = reciter.ayahSubfolder || 'Alafasy_128kbps';
+  const folder = rec.ayahSubfolder || 'Alafasy_128kbps';
   return `https://everyayah.com/data/${folder}/${paddedSurah}${paddedAyah}.mp3`;
 }

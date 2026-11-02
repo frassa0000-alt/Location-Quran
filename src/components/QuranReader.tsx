@@ -22,10 +22,20 @@ import {
   Search,
   Repeat,
   Layers,
+  Clock,
+  Moon,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import { SURAHS_LIST, SurahMeta, Ayah, BASMALA } from '../data/surahs';
 import { RECITERS, Reciter, getSurahAudioUrl, getAyahAudioUrl } from '../data/reciters';
 import { fetchSurahVerses } from '../services/quranApi';
+import {
+  isSurahAudioCached,
+  downloadSurahAudio,
+  logReadingActivity,
+  saveBookmarkItem,
+} from '../services/quranFeaturesService';
 
 interface QuranReaderProps {
   surahNumber: number;
@@ -97,6 +107,83 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
   const [directAyahInput, setDirectAyahInput] = useState<string>('');
   const audioMenuRef = useRef<HTMLDivElement | null>(null);
 
+  // Sleep Timer (مؤقت نوم)
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
+  const [sleepSecondsLeft, setSleepSecondsLeft] = useState<number | null>(null);
+
+  // Offline Audio State for Current Surah
+  const [isSurahAudioDownloaded, setIsSurahAudioDownloaded] = useState<boolean>(false);
+  const [isDownloadingCurrentAudio, setIsDownloadingCurrentAudio] = useState<boolean>(false);
+  const [currentAudioProgress, setCurrentAudioProgress] = useState<number>(0);
+  const [bookmarkFeedbackAyah, setBookmarkFeedbackAyah] = useState<number | null>(null);
+
+  // Active reading tracker (logs 1 reading minute every 60s)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      logReadingActivity(0, 1);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentSurah = useMemo<SurahMeta>(() => {
+    return SURAHS_LIST.find((s) => s.number === surahNumber) || SURAHS_LIST[0];
+  }, [surahNumber]);
+
+  // Check offline audio cached status
+  useEffect(() => {
+    let mounted = true;
+    isSurahAudioCached(surahNumber, selectedReciter.id, currentSurah.ayahCount).then((cached) => {
+      if (mounted) setIsSurahAudioDownloaded(cached);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [surahNumber, selectedReciter.id, currentSurah.ayahCount]);
+
+  // Sleep Timer countdown
+  useEffect(() => {
+    if (sleepSecondsLeft === null || sleepSecondsLeft <= 0) return;
+    const interval = setInterval(() => {
+      setSleepSecondsLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          if (audioRef.current) audioRef.current.pause();
+          setIsPlaying(false);
+          setSleepTimerMinutes(null);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sleepSecondsLeft]);
+
+  const handleSetSleepTimer = (minutes: number | null) => {
+    setSleepTimerMinutes(minutes);
+    if (minutes === null) {
+      setSleepSecondsLeft(null);
+    } else {
+      setSleepSecondsLeft(minutes * 60);
+    }
+  };
+
+  const handleDownloadCurrentSurahAudio = async () => {
+    if (isDownloadingCurrentAudio) return;
+    setIsDownloadingCurrentAudio(true);
+    setCurrentAudioProgress(0);
+
+    const success = await downloadSurahAudio(
+      surahNumber,
+      selectedReciter.id,
+      currentSurah.ayahCount,
+      (pct) => setCurrentAudioProgress(pct)
+    );
+
+    if (success) {
+      setIsSurahAudioDownloaded(true);
+    }
+    setIsDownloadingCurrentAudio(false);
+  };
+
   // Sync props when settings change
   useEffect(() => {
     if (ayahRepeatCount) setLocalRepeatCount(ayahRepeatCount);
@@ -139,9 +226,6 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const activeAyahRef = useRef<HTMLDivElement | null>(null);
 
-  const currentSurah = useMemo<SurahMeta>(() => {
-    return SURAHS_LIST.find((s) => s.number === surahNumber) || SURAHS_LIST[0];
-  }, [surahNumber]);
 
   // Smooth Slow-Motion Auto-Scroll Effect
   useEffect(() => {
@@ -652,15 +736,31 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
                     </button>
 
                     <button
-                      onClick={() => onSaveBookmark(surahNumber, ayah.number, currentSurah.name)}
-                      className={`p-1.5 rounded-xl transition-colors ${
-                        isBookmarked
-                          ? 'text-amber-400'
+                      onClick={() => {
+                        saveBookmarkItem({
+                          surahNumber,
+                          ayahNumber: ayah.number,
+                          surahName: currentSurah.name,
+                          pageNumber: ayah.page || Math.ceil(ayah.number / 15),
+                          ayahText: ayah.text,
+                          tag: 'daily',
+                        });
+                        onSaveBookmark(surahNumber, ayah.number, currentSurah.name);
+                        setBookmarkFeedbackAyah(ayah.number);
+                        setTimeout(() => setBookmarkFeedbackAyah(null), 2000);
+                      }}
+                      className={`p-1.5 rounded-xl transition-colors relative ${
+                        isBookmarked || bookmarkFeedbackAyah === ayah.number
+                          ? 'text-amber-400 bg-amber-400/10'
                           : 'hover:bg-white/10 text-slate-300 hover:text-amber-400'
                       }`}
-                      title={isBookmarked ? 'علامة القراءة الحالية' : 'حفظ كعلامة للقراءة'}
+                      title={isBookmarked ? 'علامة القراءة الحالية (انقر للتحديث)' : 'حفظ كعلامة للقراءة والورد'}
                     >
-                      <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+                      {bookmarkFeedbackAyah === ayah.number ? (
+                        <Check className="w-3.5 h-3.5 text-amber-400" />
+                      ) : (
+                        <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1197,6 +1297,70 @@ export const QuranReader: React.FC<QuranReaderProps> = ({
                     >
                       {localAutoAdvance ? 'مُفعّل' : 'مُعطّل'}
                     </button>
+                  </div>
+
+                  {/* Sleep Timer (مؤقت نوم) */}
+                  <div className="pt-2 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                        <Moon className="w-3.5 h-3.5 text-amber-400" />
+                        <span>مؤقت النوم (إيقاف تلقائي للتلاوة):</span>
+                      </label>
+                      {sleepSecondsLeft !== null && (
+                        <span className="text-[10px] font-mono text-amber-300 font-bold bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
+                          متبقي: {Math.floor(sleepSecondsLeft / 60)}:{String(sleepSecondsLeft % 60).padStart(2, '0')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[
+                        { minutes: null, label: 'إيقاف' },
+                        { minutes: 15, label: '١٥ د' },
+                        { minutes: 30, label: '٣٠ د' },
+                        { minutes: 45, label: '٤٥ د' },
+                      ].map((item) => (
+                        <button
+                          key={String(item.minutes)}
+                          type="button"
+                          onClick={() => handleSetSleepTimer(item.minutes)}
+                          className={`py-1 rounded-xl text-[10px] font-bold transition-all text-center ${
+                            sleepTimerMinutes === item.minutes
+                              ? 'ios-glass-pill-active'
+                              : 'ios-glass-pill text-amber-200 hover:text-white'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Offline Audio Caching */}
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[11px] font-bold text-amber-300 block">تلاوة أوفلاين</span>
+                      <span className="text-[9px] text-slate-400">تحميل سورة {currentSurah.name} للاستماع بدون نت</span>
+                    </div>
+                    {isDownloadingCurrentAudio ? (
+                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-300 bg-amber-400/20 px-2.5 py-1 rounded-xl border border-amber-400/30">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>{currentAudioProgress}%</span>
+                      </div>
+                    ) : isSurahAudioDownloaded ? (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2.5 py-1 rounded-xl border border-emerald-400/30">
+                        <Check className="w-3 h-3" />
+                        <span>محملة أوفلاين</span>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleDownloadCurrentSurahAudio}
+                        className="flex items-center gap-1.5 text-[10px] font-bold text-stone-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 px-3 py-1 rounded-xl shadow-xs transition-all"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>تحميل السورة</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

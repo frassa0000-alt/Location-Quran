@@ -1,12 +1,21 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, BookMarked, Play, BookOpen, CheckCircle2, WifiOff } from 'lucide-react';
+import { Search, BookMarked, Play, BookOpen, CheckCircle2, WifiOff, Award, Download, Loader2, Flame, Sparkles } from 'lucide-react';
 import { SURAHS_LIST, SurahMeta, POPULAR_SURAHS } from '../data/surahs';
 import { getCachedSurahNumbers } from '../services/quranApi';
+import {
+  getKhatmahProgress,
+  getRemainingKhatmahDays,
+  getRequiredDailyPages,
+  downloadSurahAudio,
+  isSurahAudioCached,
+} from '../services/quranFeaturesService';
 
 interface SurahCatalogProps {
   onSelectSurah: (surahNumber: number, startAyah?: number) => void;
   onQuickPlaySurah: (surahNumber: number) => void;
   onOpenFullMushaf?: () => void;
+  onOpenKhatmah?: () => void;
+  onOpenBookmarks?: () => void;
   lastReadBookmark?: { surahNumber: number; ayahNumber: number; surahName: string; timestamp: number } | null;
 }
 
@@ -14,17 +23,54 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
   onSelectSurah,
   onQuickPlaySurah,
   onOpenFullMushaf,
+  onOpenKhatmah,
+  onOpenBookmarks,
   lastReadBookmark,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'meccan' | 'medinan' | 'popular' | 'offline'>('all');
   const [selectedJuz, setSelectedJuz] = useState<number | 'all'>('all');
   const [cachedSurahIds, setCachedSurahIds] = useState<Set<number>>(() => getCachedSurahNumbers());
+  const [downloadingSurahNumber, setDownloadingSurahNumber] = useState<number | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [cachedAudioIds, setCachedAudioIds] = useState<Set<number>>(new Set());
 
-  // Refresh cached surahs periodically or on mount
+  const khatmah = useMemo(() => getKhatmahProgress(), []);
+  const remainingDays = useMemo(() => getRemainingKhatmahDays(khatmah), [khatmah]);
+  const dailyNeeded = useMemo(() => getRequiredDailyPages(khatmah), [khatmah]);
+  const khatmahPercent = Math.min(100, Math.round((khatmah.currentPage / 604) * 100));
+
+  // Check audio cache for top surahs on mount
   useEffect(() => {
     setCachedSurahIds(getCachedSurahNumbers());
+
+    // Check popular surahs for cached audio
+    const checkAudioCaches = async () => {
+      const cached = new Set<number>();
+      for (const s of SURAHS_LIST.slice(0, 15)) {
+        const isCached = await isSurahAudioCached(s.number, 'alafasy', s.ayahCount);
+        if (isCached) cached.add(s.number);
+      }
+      setCachedAudioIds(cached);
+    };
+    checkAudioCaches();
   }, []);
+
+  const handleDownloadSurahAudio = async (e: React.MouseEvent, surah: SurahMeta) => {
+    e.stopPropagation();
+    if (downloadingSurahNumber) return;
+    setDownloadingSurahNumber(surah.number);
+    setDownloadProgress(0);
+
+    const success = await downloadSurahAudio(surah.number, 'alafasy', surah.ayahCount, (pct) => {
+      setDownloadProgress(pct);
+    });
+
+    if (success) {
+      setCachedAudioIds((prev) => new Set([...prev, surah.number]));
+    }
+    setDownloadingSurahNumber(null);
+  };
 
   const filteredSurahs = useMemo(() => {
     return SURAHS_LIST.filter((surah) => {
@@ -63,30 +109,88 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
           </p>
         </div>
 
-        {/* Top Actions: Full Mushaf & Last Read Bookmark */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Top Actions: Full Mushaf, Khatmah Tracker & Bookmarks */}
+        <div className="flex flex-wrap items-center gap-2">
           {onOpenFullMushaf && (
             <button
               onClick={onOpenFullMushaf}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-bold text-xs shadow-md shadow-amber-950/30 transition-all hover:scale-105 active:scale-95 border border-white/30"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-stone-950 font-bold text-xs shadow-md shadow-amber-950/30 transition-all hover:scale-105 active:scale-95 border border-white/30"
             >
-              <BookOpen className="w-4 h-4 fill-current" />
+              <BookOpen className="w-3.5 h-3.5 fill-current" />
               <span>المصحف الشريف</span>
+            </button>
+          )}
+
+          {onOpenKhatmah && (
+            <button
+              onClick={onOpenKhatmah}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl ios-glass-pill hover:bg-white/15 text-amber-300 text-xs font-semibold transition-all hover:border-amber-400/50"
+              title="متابعة الختمة وإحصائيات القراءة"
+            >
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span>الختمة ({khatmahPercent}%)</span>
+            </button>
+          )}
+
+          {onOpenBookmarks && (
+            <button
+              onClick={onOpenBookmarks}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl ios-glass-pill hover:bg-white/15 text-slate-200 text-xs font-semibold transition-all hover:border-amber-400/50"
+              title="العلامات المرجعية المحفوظة"
+            >
+              <BookMarked className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">العلامات</span>
             </button>
           )}
 
           {lastReadBookmark && (
             <button
               onClick={() => onSelectSurah(lastReadBookmark.surahNumber, lastReadBookmark.ayahNumber)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-2xl ios-glass-pill text-slate-200 text-xs transition-all hover:border-amber-400/50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl ios-glass-pill text-slate-200 text-xs transition-all hover:border-amber-400/50"
               title="متابعة القراءة من آخر موضع"
             >
-              <BookMarked className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>آخر موضع: سورة {lastReadBookmark.surahName} (الآية {lastReadBookmark.ayahNumber})</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>آخر موضع: سورة {lastReadBookmark.surahName} ({lastReadBookmark.ayahNumber})</span>
             </button>
           )}
         </div>
       </div>
+
+      {/* iOS Liquid Glass Khatmah Progress Card */}
+      {onOpenKhatmah && (
+        <div
+          onClick={onOpenKhatmah}
+          className="ios-liquid-glass-card rounded-2xl p-3.5 sm:p-4 cursor-pointer hover:border-amber-400/50 transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-right group shadow-lg"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400/20 to-amber-600/30 border border-amber-400/40 text-amber-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Award className="w-5 h-5 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-amber-300">متابعة ختمة القرآن الكريم</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 font-mono font-bold">
+                  {khatmahPercent}%
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                وصلت إلى الصفحة <span className="font-bold text-amber-200">{khatmah.currentPage}</span> من ٦٠٤ · الجزء {khatmah.currentJuz}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+            <div className="text-right sm:text-left text-[11px] text-slate-400">
+              <span>المتبقي: <strong className="text-amber-300">{604 - khatmah.currentPage}</strong> صفحة</span>
+              <span className="mx-1.5 text-white/20">|</span>
+              <span>المستهدف: <strong className="text-amber-300">{dailyNeeded}</strong> ص/يوم</span>
+            </div>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-400/15 group-hover:bg-amber-400 group-hover:text-stone-950 text-amber-300 border border-amber-400/30 transition-all whitespace-nowrap">
+              متابعة وإحصائيات
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Control Strip: Liquid Glass Search & Filter Tabs */}
       <div className="space-y-3.5">
@@ -276,6 +380,30 @@ export const SurahCatalog: React.FC<SurahCatalogProps> = ({
 
                   {/* Actions */}
                   <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Offline Audio Download Button */}
+                    {downloadingSurahNumber === surah.number ? (
+                      <div className="h-8 px-2 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center gap-1 text-[10px] font-mono shrink-0">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>{downloadProgress}%</span>
+                      </div>
+                    ) : cachedAudioIds.has(surah.number) ? (
+                      <span
+                        className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center shrink-0"
+                        title="تم تحميل التلاوة للاستماع أوفلاين"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => handleDownloadSurahAudio(e, surah)}
+                        className="w-8 h-8 rounded-xl text-slate-400 hover:text-amber-300 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center shrink-0 shadow-xs active:scale-95"
+                        title="تحميل السورة للاستماع أوفلاين"
+                        aria-label="تحميل السورة أوفلاين"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
